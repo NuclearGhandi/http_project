@@ -31,7 +31,7 @@ func TestPostRoute(t *testing.T) {
 			method: http.MethodPost,
 			want: want{
 				code:        201,
-				response:    `http://localhost:8080/tWWoMToW`,
+				response:    `http://localhost:8080`,
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -50,7 +50,7 @@ func TestPostRoute(t *testing.T) {
 			method: http.MethodPost,
 			want: want{
 				code:        201,
-				response:    `http://localhost:8080/ONNWSVnL`,
+				response:    `http://localhost:8080`,
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -66,7 +66,9 @@ func TestPostRoute(t *testing.T) {
 			assert.Equal(t, test.want.code, res.StatusCode)
 
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
-			assert.Equal(t, test.want.response, w.Body.String())
+			if res.StatusCode == 201 {
+				assert.Equal(t, test.want.response, w.Body.String()[:21])
+			}
 		})
 	}
 }

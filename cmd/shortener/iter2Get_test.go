@@ -66,10 +66,11 @@ func TestGetRoute(t *testing.T) {
 	}
 	router := setupRouter()
 	m = make(map[string]string)
-	for _, URL := range urls {
+	for i, URL := range urls {
 		req, _ := http.NewRequest(http.MethodPost, "http://localhost:8080/", strings.NewReader(URL))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
+		tests[i].URL = w.Body.String()[21:]
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
