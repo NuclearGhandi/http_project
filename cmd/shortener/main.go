@@ -1,19 +1,19 @@
 package main
 
 import (
-	"fmt"
+	//	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
-	"time"
+	// "time"
 )
 
-const host = "http://localhost:8080/"
+const host = "http://localhost:8080"
 
 var m map[string]string
 
 func init() {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(100)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -26,10 +26,11 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func encode(url string) string {
-	key := randSeq(8)
+func postHandler(url string, m map[string]string) string {
+	key := "/" + randSeq(8)
 	m[key] = url
-	return key
+	outUrl := host + key
+	return outUrl
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
@@ -38,37 +39,47 @@ func mainPage(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			serverErr(w)
 		} else {
-			fmt.Println(string(body))
-			url := host + encode(string(body))
-			fmt.Println(url)
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusCreated)
-			io.WriteString(w, url)
+			io.WriteString(w, postHandler(string(body), m))
 		}
 	} else if r.Method == http.MethodGet {
-		key := r.URL.Path[1:]
+		key := r.URL.Path
 		url, ok := m[key]
 		if ok {
-			fmt.Println(key)
 			http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 		} else {
 			serverErr(w)
 		}
+	} else {
+		serverErr(w)
 	}
 }
 
-// func redirectPage(w http.ResponseWriter, r *http.Request){
-// key :=
-// http.Redirect(w, r, m[key], http.StatusTemporaryRedirect)
-// }
+func redirectPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		key := r.URL.Path
+		url, ok := m[key]
+		if ok {
+			http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+		} else {
+			serverErr(w)
+		}
+	} else {
+		serverErr(w)
+	}
+}
+
 func serverErr(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusBadRequest)
 	w.Header().Set("Content-Type", "text/html")
 }
 func main() {
 	m = make(map[string]string)
-	//http.HandlerFunc('/',redirectPage)
-	err := http.ListenAndServe(`:8080`, http.HandlerFunc(mainPage))
+	mux := http.NewServeMux()
+	mux.HandleFunc(`/`, mainPage)
+	//	mux.HandleFunc(`/`, redirectPage)
+	err := http.ListenAndServe(`:8080`, mux)
 	if err != nil {
 		panic(err)
 	}
