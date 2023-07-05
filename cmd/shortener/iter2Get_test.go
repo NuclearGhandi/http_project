@@ -83,9 +83,9 @@ func TestGetHandler(t *testing.T) {
 			// получаем и проверяем тело запроса
 			defer res.Body.Close()
 			if res.StatusCode == 307 {
-				inUrl, err := res.Location()
+				inURL, err := res.Location()
 				require.NoError(t, err)
-				assert.Equal(t, inUrl.String(), test.want.location)
+				assert.Equal(t, inURL.String(), test.want.location)
 			}
 		})
 	}

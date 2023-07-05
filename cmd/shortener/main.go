@@ -29,8 +29,8 @@ func randSeq(n int) string {
 func postHandler(url string, m map[string]string) string {
 	key := "/" + randSeq(8)
 	m[key] = url
-	outUrl := host + key
-	return outUrl
+	outURL := host + key
+	return outURL
 }
 
 func mainPage(w http.ResponseWriter, r *http.Request) {
