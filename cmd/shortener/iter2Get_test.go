@@ -6,23 +6,18 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	//	"strings"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func GetTestInit() map[string]string {
-	m = map[string]string{
-		"/WegaFuIk": "https://vk.com",
-		"/llllllll": "https://vk.com",
-		"/GGGGGGGG": "https://google.com",
-	}
-	return m
-}
-func TestGetHandler(t *testing.T) {
-	m = GetTestInit()
+func TestGetRoute(t *testing.T) {
+	var urls [3]string
+	urls[0] = "https://vk.com"
+	urls[1] = "https://vk.com"
+	urls[2] = "https://google.com"
 	type want struct {
 		code     int
 		location string
@@ -35,7 +30,7 @@ func TestGetHandler(t *testing.T) {
 	}{
 		{
 			name:   "Url decoder test#1",
-			URL:    "/WegaFuIk",
+			URL:    "/tWWoMToW",
 			method: http.MethodGet,
 			want: want{
 				code:     307,
@@ -44,7 +39,7 @@ func TestGetHandler(t *testing.T) {
 		},
 		{
 			name:   "Url decoder test#2",
-			URL:    "/llllllll",
+			URL:    "/ONNWSVnL",
 			method: http.MethodGet,
 			want: want{
 				code:     307,
@@ -53,7 +48,7 @@ func TestGetHandler(t *testing.T) {
 		},
 		{
 			name:   "Url decoder test#3",
-			URL:    "/GGGGGGGG",
+			URL:    "/AAlTaquI",
 			method: http.MethodGet,
 			want: want{
 				code:     307,
@@ -69,19 +64,21 @@ func TestGetHandler(t *testing.T) {
 			},
 		},
 	}
+	router := setupRouter()
+	m = make(map[string]string)
+	for _, URL := range urls {
+		req, _ := http.NewRequest(http.MethodPost, "http://localhost:8080/", strings.NewReader(URL))
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(test.method, test.URL, nil)
 
-			// создаём новый Recorder
 			w := httptest.NewRecorder()
-			mainPage(w, request)
-
+			req, _ := http.NewRequest(test.method, test.URL, nil)
+			router.ServeHTTP(w, req)
 			res := w.Result()
-			// проверяем код ответа
-			assert.Equal(t, res.StatusCode, test.want.code)
-			// получаем и проверяем тело запроса
-			defer res.Body.Close()
+			assert.Equal(t, test.want.code, res.StatusCode)
 			if res.StatusCode == 307 {
 				inURL, err := res.Location()
 				require.NoError(t, err)

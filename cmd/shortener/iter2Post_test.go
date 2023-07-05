@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,10 +8,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestPostHandler(t *testing.T) {
+func TestPostRoute(t *testing.T) {
 	m = make(map[string]string)
 	type want struct {
 		code        int
@@ -33,8 +31,8 @@ func TestPostHandler(t *testing.T) {
 			method: http.MethodPost,
 			want: want{
 				code:        201,
-				response:    `http://localhost:8080/pqKqEKDz`,
-				contentType: "text/plain",
+				response:    `http://localhost:8080/tWWoMToW`,
+				contentType: "text/plain; charset=utf-8",
 			},
 		},
 		{
@@ -52,30 +50,23 @@ func TestPostHandler(t *testing.T) {
 			method: http.MethodPost,
 			want: want{
 				code:        201,
-				response:    `http://localhost:8080/WfPgrmli`,
-				contentType: "text/plain",
+				response:    `http://localhost:8080/ONNWSVnL`,
+				contentType: "text/plain; charset=utf-8",
 			},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			fmt.Println(test.body)
-			request := httptest.NewRequest(test.method, "/status", test.body)
+			router := setupRouter()
 
-			// создаём новый Recorder
 			w := httptest.NewRecorder()
-			mainPage(w, request)
-
+			req, _ := http.NewRequest(test.method, "/", test.body)
+			router.ServeHTTP(w, req)
 			res := w.Result()
-			// проверяем код ответа
-			assert.Equal(t, res.StatusCode, test.want.code)
-			// получаем и проверяем тело запроса
-			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
+			assert.Equal(t, test.want.code, res.StatusCode)
 
-			require.NoError(t, err)
-			assert.Equal(t, string(resBody), test.want.response)
-			assert.Equal(t, res.Header.Get("Content-Type"), test.want.contentType)
+			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
+			assert.Equal(t, test.want.response, w.Body.String())
 		})
 	}
 }
