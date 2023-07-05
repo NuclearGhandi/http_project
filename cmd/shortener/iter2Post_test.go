@@ -69,6 +69,7 @@ func TestPostRoute(t *testing.T) {
 			if res.StatusCode == 201 {
 				assert.Equal(t, test.want.response, w.Body.String()[:21])
 			}
+			defer res.Body.Close()
 		})
 	}
 }
