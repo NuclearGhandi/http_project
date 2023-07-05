@@ -29,9 +29,10 @@ func randSeq(n int) string {
 func postHandler(url string, m map[string]string) string {
 	key := "/" + randSeq(8)
 	m[key] = url
-	outURL := host + key
-	return outURL
+	outUrl := host + key
+	return outUrl
 }
+
 func mainPage(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		body, err := io.ReadAll(r.Body)
@@ -77,6 +78,7 @@ func main() {
 	m = make(map[string]string)
 	mux := http.NewServeMux()
 	mux.HandleFunc(`/`, mainPage)
+	//	mux.HandleFunc(`/`, redirectPage)
 	err := http.ListenAndServe(`:8080`, mux)
 	if err != nil {
 		panic(err)
