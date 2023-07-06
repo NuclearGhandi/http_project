@@ -37,7 +37,7 @@ func randSeq(n int) string {
 func addURL(url string, m map[string]string) string {
 	key := randSeq(8)
 	m[key] = url
-	outURL := config.host + "/" + key
+	outURL := config.redirectorURL + "/" + key
 	return outURL
 }
 
