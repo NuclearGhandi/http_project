@@ -13,8 +13,8 @@ import (
 var m map[string]string
 
 type сonfiguration struct {
-	RunPort string
-	host    string
+	RunPort       string
+	redirectorURL string
 }
 
 var config сonfiguration
@@ -77,12 +77,12 @@ func serverErr(c *gin.Context) {
 }
 func main() {
 	ServerInit()
-	runPortPoint := flag.String("a", ":8080", "RunPort")
-	returnPortPoint := flag.String("b", "http://localhost:8080", "ReturnPort")
+	runPortPointer := flag.String("a", ":8080", "RunPort")
+	returnPortPointer := flag.String("b", "http://localhost:8080", "ReturnPort")
 	flag.Parse()
-	config.RunPort = *runPortPoint
-	config.host = *returnPortPoint
-	fmt.Println(*runPortPoint, "\n", *returnPortPoint)
+	config.RunPort = *runPortPointer
+	config.redirectorURL = *returnPortPointer
+	fmt.Println(*runPortPointer, "\n", *returnPortPointer)
 	m = make(map[string]string)
 
 	r := setupRouter()
