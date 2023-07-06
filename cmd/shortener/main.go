@@ -1,18 +1,21 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-const host = "http://localhost:8080"
+var host = "http://localhost"
 
 var m map[string]string
 
 func init() {
-	rand.Seed(125)
+	rand.Seed(time.Now().UnixNano())
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -68,6 +71,11 @@ func serverErr(c *gin.Context) {
 }
 func main() {
 	m = make(map[string]string)
+	RunPort := flag.String("a", ":8080", "RunPort")
+	ReturnPort := flag.String("b", ":8080", "returnPort")
+	flag.Parse()
+	fmt.Println(*RunPort + "\n" + *ReturnPort)
+	host = host + *ReturnPort
 	r := setupRouter()
-	r.Run(":8080")
+	r.Run(*RunPort)
 }
