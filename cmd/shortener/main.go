@@ -80,8 +80,8 @@ func main() {
 	runPortPoint := flag.String("a", "8080", "RunPort")
 	returnPortPoint := flag.String("b", "8080", "ReturnPort")
 	flag.Parse()
-	config.RunPort = ":" + *runPortPoint
-	config.host = "http://localhost:" + *returnPortPoint
+	config.RunPort = *runPortPoint
+	config.host = *returnPortPoint
 	fmt.Println(*runPortPoint, "\n", *returnPortPoint)
 	m = make(map[string]string)
 
