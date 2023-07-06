@@ -11,6 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TServerInit() {
+	config.RunPort = ":8080"
+	config.host = "http://localhost:8080"
+}
 func TestPostRoute(t *testing.T) {
 	m = make(map[string]string)
 	type want struct {
@@ -56,7 +60,7 @@ func TestPostRoute(t *testing.T) {
 			},
 		},
 	}
-	ServerInit()
+	TServerInit()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			router := setupRouter()

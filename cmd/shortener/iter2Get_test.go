@@ -64,7 +64,7 @@ func TestGetRoute(t *testing.T) {
 			},
 		},
 	}
-	ServerInit()
+	TServerInit()
 	router := setupRouter()
 	m = make(map[string]string)
 	for i, URL := range urls {
