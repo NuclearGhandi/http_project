@@ -10,12 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var host = "http://localhost"
-
 var m map[string]string
 
-func init() {
+type Configuration struct {
+	RunPort string
+	host    string
+}
+
+var config Configuration
+
+func ServerInit() {
 	rand.Seed(time.Now().UnixNano())
+	config.RunPort = *flag.String("a", ":8080", "RunPort")
+	config.host = "http://localhost" + *flag.String("b", ":8080", "returnPort")
+	flag.Parse()
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -31,7 +39,7 @@ func randSeq(n int) string {
 func addURL(url string, m map[string]string) string {
 	key := randSeq(8)
 	m[key] = url
-	outURL := host + "/" + key
+	outURL := config.host + "/" + key
 	return outURL
 }
 
@@ -70,12 +78,9 @@ func serverErr(c *gin.Context) {
 	c.AbortWithStatus(http.StatusBadRequest)
 }
 func main() {
+	ServerInit()
 	m = make(map[string]string)
-	RunPort := flag.String("a", ":8080", "RunPort")
-	ReturnPort := flag.String("b", ":8080", "returnPort")
-	flag.Parse()
-	fmt.Println(*RunPort + "\n" + *ReturnPort)
-	host = host + *ReturnPort
+	fmt.Println(config.RunPort + "___\n___" + config.host)
 	r := setupRouter()
-	r.Run(*RunPort)
+	r.Run(config.RunPort)
 }

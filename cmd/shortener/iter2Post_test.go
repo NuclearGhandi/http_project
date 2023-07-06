@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -55,10 +56,10 @@ func TestPostRoute(t *testing.T) {
 			},
 		},
 	}
+	ServerInit()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			router := setupRouter()
-
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest(test.method, "/", test.body)
 			router.ServeHTTP(w, req)
@@ -67,6 +68,7 @@ func TestPostRoute(t *testing.T) {
 
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
 			if res.StatusCode == 201 {
+				fmt.Println(w.Body.String())
 				assert.Equal(t, test.want.response, w.Body.String()[:21])
 			}
 			defer res.Body.Close()
