@@ -12,8 +12,8 @@ import (
 )
 
 func TServerInit() {
-	//	config.RunPort = ":8080"
-	//	config.host = "http://localhost:8080"
+	config.RunPort = ":8080"
+	config.host = "http://localhost:8080"
 	fmt.Println("test_init")
 }
 func TestPostRoute(t *testing.T) {
