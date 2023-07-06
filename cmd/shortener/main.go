@@ -24,6 +24,7 @@ func ServerInit() {
 	config.RunPort = ":" + *flag.String("a", "8080", "RunPort")
 	config.host = "http://localhost:" + *flag.String("b", "8080", "returnPort")
 	flag.Parse()
+	fmt.Println(config.RunPort + "\n" + config.host)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -80,7 +81,7 @@ func serverErr(c *gin.Context) {
 func main() {
 	ServerInit()
 	m = make(map[string]string)
-	fmt.Println(config.RunPort + "___\n___" + config.host)
+
 	r := setupRouter()
 	r.Run(config.RunPort)
 }
