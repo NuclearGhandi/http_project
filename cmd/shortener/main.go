@@ -21,8 +21,8 @@ var config Configuration
 
 func ServerInit() {
 	rand.Seed(time.Now().UnixNano())
-	config.RunPort = ":" + *flag.String("a", "8080", "RunPort")
-	config.host = "http://localhost:" + *flag.String("b", "8080", "returnPort")
+	config.RunPort = ":" + string(*flag.Int("a", 8080, "RunPort"))
+	config.host = "http://localhost:" + string(*flag.Int("b", 8080, "returnPort"))
 	flag.Parse()
 	fmt.Println(config.RunPort + "\n" + config.host)
 }
