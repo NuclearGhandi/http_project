@@ -21,10 +21,7 @@ var config сonfiguration
 
 func ServerInit() {
 	rand.Seed(time.Now().UnixNano())
-	config.RunPort = ":" + *flag.String("a", "8080", "RunPort")
-	config.host = "http://localhost:" + *flag.String("b", "8080", "returnPort")
-	flag.Parse()
-	fmt.Println(config.RunPort + "\n" + config.host)
+
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -80,6 +77,12 @@ func serverErr(c *gin.Context) {
 }
 func main() {
 	ServerInit()
+	runPortPoint := flag.String("a", "8080", "RunPort")
+	returnPortPoint := flag.String("b", "8080", "ReturnPort")
+	flag.Parse()
+	config.RunPort = ":" + *runPortPoint
+	config.host = "http://localhost:" + *returnPortPoint
+	fmt.Println(*runPortPoint, "\n", *returnPortPoint)
 	m = make(map[string]string)
 
 	r := setupRouter()
