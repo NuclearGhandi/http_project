@@ -12,12 +12,12 @@ import (
 
 var m map[string]string
 
-type Configuration struct {
+type сonfiguration struct {
 	RunPort string
 	host    string
 }
 
-var config Configuration
+var config сonfiguration
 
 func ServerInit() {
 	rand.Seed(time.Now().UnixNano())
