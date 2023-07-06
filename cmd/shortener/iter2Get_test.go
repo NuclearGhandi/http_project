@@ -30,7 +30,7 @@ func TestGetRoute(t *testing.T) {
 	}{
 		{
 			name:   "Url decoder test#1",
-			URL:    "/tWWoMToW",
+			URL:    "",
 			method: http.MethodGet,
 			want: want{
 				code:     307,
@@ -39,7 +39,7 @@ func TestGetRoute(t *testing.T) {
 		},
 		{
 			name:   "Url decoder test#2",
-			URL:    "/ONNWSVnL",
+			URL:    "",
 			method: http.MethodGet,
 			want: want{
 				code:     307,
@@ -48,7 +48,7 @@ func TestGetRoute(t *testing.T) {
 		},
 		{
 			name:   "Url decoder test#3",
-			URL:    "/AAlTaquI",
+			URL:    "",
 			method: http.MethodGet,
 			want: want{
 				code:     307,
@@ -57,7 +57,7 @@ func TestGetRoute(t *testing.T) {
 		},
 		{
 			name:   "Url decoder test#4",
-			URL:    "/gfjdhyul",
+			URL:    "/12012412",
 			method: http.MethodGet,
 			want: want{
 				code: 400,
