@@ -77,8 +77,8 @@ func serverErr(c *gin.Context) {
 }
 func main() {
 	ServerInit()
-	runPortPoint := flag.String("a", "8080", "RunPort")
-	returnPortPoint := flag.String("b", "8080", "ReturnPort")
+	runPortPoint := flag.String("a", ":8080", "RunPort")
+	returnPortPoint := flag.String("b", "http://localhost:8080", "ReturnPort")
 	flag.Parse()
 	config.RunPort = *runPortPoint
 	config.host = *returnPortPoint
