@@ -12,8 +12,8 @@ import (
 )
 
 func TServerInit() {
-	config.RunPort = ":8080"
-	config.redirectorURL = "http://localhost:8080"
+	cfg.ServerAddress = ":8080"
+	cfg.BaseURL = "http://localhost:8080"
 	fmt.Println("test_init")
 }
 func TestPostRoute(t *testing.T) {

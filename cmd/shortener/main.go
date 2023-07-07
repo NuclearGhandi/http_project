@@ -3,25 +3,37 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"time"
 
+	"github.com/caarlos0/env"
 	"github.com/gin-gonic/gin"
 )
 
 var m map[string]string
 
-type сonfiguration struct {
-	RunPort       string
-	redirectorURL string
+type Config struct {
+	ServerAddress string `env:"SERVER_ADDRESS"`
+	BaseURL       string `env:"BASE_URL"`
 }
 
-var config сonfiguration
+var cfg Config
 
 func ServerInit() {
 	rand.Seed(time.Now().UnixNano())
-
+	serverAddressPointer := flag.String("a", ":8080", "Server Address")
+	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
+	flag.Parse()
+	cfg.ServerAddress = *serverAddressPointer
+	cfg.BaseURL = *baseURLPointer
+	fmt.Println(cfg.ServerAddress, "\n", cfg.BaseURL)
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(cfg)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -37,7 +49,7 @@ func randSeq(n int) string {
 func addURL(url string, m map[string]string) string {
 	key := randSeq(8)
 	m[key] = url
-	outURL := config.redirectorURL + "/" + key
+	outURL := cfg.BaseURL + "/" + key
 	return outURL
 }
 
@@ -77,14 +89,8 @@ func serverErr(c *gin.Context) {
 }
 func main() {
 	ServerInit()
-	runPortPointer := flag.String("a", ":8080", "RunPort")
-	returnPortPointer := flag.String("b", "http://localhost:8080", "ReturnPort")
-	flag.Parse()
-	config.RunPort = *runPortPointer
-	config.redirectorURL = *returnPortPointer
-	fmt.Println(*runPortPointer, "\n", *returnPortPointer)
 	m = make(map[string]string)
 
 	r := setupRouter()
-	r.Run(config.RunPort)
+	r.Run(cfg.ServerAddress)
 }
