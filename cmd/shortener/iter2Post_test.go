@@ -18,7 +18,7 @@ func TServerInit() {
 	//	log.Println("test_init")
 }
 func TestPostRoute(t *testing.T) {
-	rnt.keyToUrlMap = make(map[string]string)
+	rnt.keytoURLMap = make(map[string]string)
 	type want struct {
 		code        int
 		response    string

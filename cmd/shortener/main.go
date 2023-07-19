@@ -18,7 +18,7 @@ type Config struct {
 }
 
 type Runtime struct {
-	keyToUrlMap map[string]string
+	keytoURLMap map[string]string
 }
 
 var cfg Config
@@ -51,14 +51,14 @@ func randSeq(n int) string {
 
 func addURL(url string) string {
 	key := randSeq(8)
-	rnt.keyToUrlMap[key] = url
+	rnt.keytoURLMap[key] = url
 	outURL := cfg.BaseURL + "/" + key
 	return outURL
 }
 
 func handleGET(c *gin.Context) {
 	key := c.Param("key")
-	url, ok := rnt.keyToUrlMap[key]
+	url, ok := rnt.keytoURLMap[key]
 	if ok {
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	} else {
@@ -91,7 +91,7 @@ func serverErr(c *gin.Context) {
 }
 func main() {
 	ServerInit()
-	rnt.keyToUrlMap = make(map[string]string)
+	rnt.keytoURLMap = make(map[string]string)
 
 	r := setupRouter()
 	r.Run(cfg.ServerAddress)
