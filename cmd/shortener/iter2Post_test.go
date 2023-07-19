@@ -80,6 +80,7 @@ func TestPostRoute(t *testing.T) {
 				fmt.Println(w.Body.String())
 				assert.Equal(t, test.want.response, w.Body.String()[:21])
 			}
+			defer res.Body.Close()
 		})
 	}
 }
