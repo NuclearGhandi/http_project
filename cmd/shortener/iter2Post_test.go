@@ -15,10 +15,10 @@ import (
 func TServerInit() {
 	cfg.ServerAddress = ":8080"
 	cfg.BaseURL = "http://localhost:8080"
-	fmt.Println("test_init")
+	//	log.Println("test_init")
 }
 func TestPostRoute(t *testing.T) {
-	m = make(map[string]string)
+	rnt.keyToUrlMap = make(map[string]string)
 	type want struct {
 		code        int
 		response    string

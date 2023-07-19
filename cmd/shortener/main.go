@@ -49,9 +49,9 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func addURL(url string, m map[string]string) string {
+func addURL(url string) string {
 	key := randSeq(8)
-	m[key] = url
+	rnt.keyToUrlMap[key] = url
 	outURL := cfg.BaseURL + "/" + key
 	return outURL
 }
@@ -73,7 +73,7 @@ func handlePOST(c *gin.Context) {
 		if err != nil {
 			serverErr(c)
 		} else {
-			c.String(http.StatusCreated, addURL(string(body), rnt.keyToUrlMap))
+			c.String(http.StatusCreated, addURL(string(body)))
 		}
 	}
 }

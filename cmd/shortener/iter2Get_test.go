@@ -3,9 +3,9 @@ package main
 import (
 	//	"fmt"
 	//	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
-
 	"strings"
 	"testing"
 
@@ -33,7 +33,7 @@ func TestGetRoute(t *testing.T) {
 			URL:    "",
 			method: http.MethodGet,
 			want: want{
-				code:     307,
+				code:     http.StatusTemporaryRedirect,
 				location: "https://vk.com",
 			},
 		},
@@ -42,7 +42,7 @@ func TestGetRoute(t *testing.T) {
 			URL:    "",
 			method: http.MethodGet,
 			want: want{
-				code:     307,
+				code:     http.StatusTemporaryRedirect,
 				location: "https://vk.com",
 			},
 		},
@@ -51,7 +51,7 @@ func TestGetRoute(t *testing.T) {
 			URL:    "",
 			method: http.MethodGet,
 			want: want{
-				code:     307,
+				code:     http.StatusTemporaryRedirect,
 				location: "https://google.com",
 			},
 		},
@@ -60,15 +60,18 @@ func TestGetRoute(t *testing.T) {
 			URL:    "/12012412",
 			method: http.MethodGet,
 			want: want{
-				code: 400,
+				code: http.StatusBadRequest,
 			},
 		},
 	}
 	TServerInit()
 	router := setupRouter()
-	m = make(map[string]string)
+	rnt.keyToUrlMap = make(map[string]string)
 	for i, URL := range urls {
-		req, _ := http.NewRequest(http.MethodPost, "http://localhost:8080/", strings.NewReader(URL))
+		req, err := http.NewRequest(http.MethodPost, "http://localhost:8080/", strings.NewReader(URL))
+		if err != nil {
+			log.Fatal(err)
+		}
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 		tests[i].URL = w.Body.String()[21:]
@@ -81,12 +84,11 @@ func TestGetRoute(t *testing.T) {
 			router.ServeHTTP(w, req)
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
-			if res.StatusCode == 307 {
+			if res.StatusCode == http.StatusTemporaryRedirect {
 				inURL, err := res.Location()
 				require.NoError(t, err)
 				assert.Equal(t, inURL.String(), test.want.location)
 			}
-			defer res.Body.Close()
 		})
 	}
 }
