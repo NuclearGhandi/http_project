@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -36,7 +37,7 @@ func TestPostRoute(t *testing.T) {
 			body:   strings.NewReader("https://google.com"),
 			method: http.MethodPost,
 			want: want{
-				code:        201,
+				code:        http.StatusCreated,
 				response:    `http://localhost:8080`,
 				contentType: "text/plain; charset=utf-8",
 			},
@@ -45,7 +46,7 @@ func TestPostRoute(t *testing.T) {
 			name:   "Url encoder test#2",
 			method: http.MethodGet,
 			want: want{
-				code:        400,
+				code:        http.StatusBadRequest,
 				response:    ``,
 				contentType: "",
 			},
@@ -55,7 +56,7 @@ func TestPostRoute(t *testing.T) {
 			body:   strings.NewReader("https://github.com/NuclearGhandi/http_project"),
 			method: http.MethodPost,
 			want: want{
-				code:        201,
+				code:        http.StatusCreated,
 				response:    `http://localhost:8080`,
 				contentType: "text/plain; charset=utf-8",
 			},
@@ -66,17 +67,19 @@ func TestPostRoute(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			router := setupRouter()
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest(test.method, "/", test.body)
+			req, err := http.NewRequest(test.method, "/", test.body)
+			if err != nil {
+				log.Fatal(err)
+			}
 			router.ServeHTTP(w, req)
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
 
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
-			if res.StatusCode == 201 {
+			if res.StatusCode == http.StatusCreated {
 				fmt.Println(w.Body.String())
 				assert.Equal(t, test.want.response, w.Body.String()[:21])
 			}
-			defer res.Body.Close()
 		})
 	}
 }

@@ -12,14 +12,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var m map[string]string
-
 type Config struct {
 	ServerAddress string `env:"SERVER_ADDRESS"`
 	BaseURL       string `env:"BASE_URL"`
 }
 
+type Runtime struct {
+	keyToUrlMap map[string]string
+}
+
 var cfg Config
+var rnt Runtime
 
 func ServerInit() {
 	rand.Seed(time.Now().UnixNano())
@@ -55,7 +58,7 @@ func addURL(url string, m map[string]string) string {
 
 func handleGET(c *gin.Context) {
 	key := c.Param("key")
-	url, ok := m[key]
+	url, ok := rnt.keyToUrlMap[key]
 	if ok {
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	} else {
@@ -70,7 +73,7 @@ func handlePOST(c *gin.Context) {
 		if err != nil {
 			serverErr(c)
 		} else {
-			c.String(http.StatusCreated, addURL(string(body), m))
+			c.String(http.StatusCreated, addURL(string(body), rnt.keyToUrlMap))
 		}
 	}
 }
@@ -78,7 +81,6 @@ func setupRouter() *gin.Engine {
 	r := gin.Default()
 	r.GET("/:key", handleGET)
 	r.POST("/", handlePOST)
-
 	r.POST("/:key", serverErr)
 	r.GET("/", serverErr)
 	return r
@@ -89,7 +91,7 @@ func serverErr(c *gin.Context) {
 }
 func main() {
 	ServerInit()
-	m = make(map[string]string)
+	rnt.keyToUrlMap = make(map[string]string)
 
 	r := setupRouter()
 	r.Run(cfg.ServerAddress)
