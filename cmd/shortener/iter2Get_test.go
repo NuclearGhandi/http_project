@@ -89,6 +89,7 @@ func TestGetRoute(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, inURL.String(), test.want.location)
 			}
+			defer res.Body.Close()
 		})
 	}
 }
