@@ -26,6 +26,12 @@ var cfg Config
 var rnt Runtime
 
 func ServerInit() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	defer logger.Sync()
+	rnt.sugar = *logger.Sugar()
 	rand.Seed(time.Now().UnixNano())
 	serverAddressPointer := flag.String("a", ":8080", "Server Address")
 	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
@@ -33,7 +39,7 @@ func ServerInit() {
 	cfg.ServerAddress = *serverAddressPointer
 	cfg.BaseURL = *baseURLPointer
 	fmt.Println(cfg.ServerAddress, "\n", cfg.BaseURL)
-	err := env.Parse(&cfg)
+	err = env.Parse(&cfg)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "server init")
 	}
@@ -113,12 +119,7 @@ func serverErr(c *gin.Context) {
 	c.AbortWithStatus(http.StatusBadRequest)
 }
 func main() {
-	logger, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
-	defer logger.Sync()
-	rnt.sugar = *logger.Sugar()
+
 	ServerInit()
 	rnt.keytoURLMap = make(map[string]string)
 

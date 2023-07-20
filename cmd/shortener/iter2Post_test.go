@@ -10,11 +10,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 func TServerInit() {
 	cfg.ServerAddress = ":8080"
 	cfg.BaseURL = "http://localhost:8080"
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	defer logger.Sync()
+	rnt.sugar = *logger.Sugar()
 	//	log.Println("test_init")
 }
 func TestPostRoute(t *testing.T) {
@@ -22,7 +29,6 @@ func TestPostRoute(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
-		location    string
 		contentType string
 	}
 	tests := []struct {
