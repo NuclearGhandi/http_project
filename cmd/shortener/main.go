@@ -46,7 +46,7 @@ func ServerInit() {
 	flag.Parse()
 	cfg.ServerAddress = *serverAddressPointer
 	cfg.BaseURL = *baseURLPointer
-	fmt.Println(cfg.ServerAddress, "\n", cfg.BaseURL)
+	//fmt.Println(cfg.ServerAddress, "\n", cfg.BaseURL)
 	err = env.Parse(&cfg)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "server init")
@@ -90,7 +90,7 @@ func handlePOST(c *gin.Context) {
 		}
 	}
 }
-func handleApiPOST(c *gin.Context) {
+func handleAPIPOST(c *gin.Context) {
 	fmt.Println("API")
 	var inpt inputJSON
 	var outpt outputJSON
@@ -128,10 +128,10 @@ func Logger() gin.HandlerFunc {
 		size := c.Writer.Size()
 		rnt.sugar.Infoln(
 			"uri", uri,
-			"| method", method,
-			"| status", status,
-			"| duration", duration,
-			"| size", size,
+			"method", method,
+			"status", status,
+			"duration", duration,
+			"size", size,
 		)
 	}
 }
@@ -145,7 +145,7 @@ func setupRouter() *gin.Engine {
 
 	r.POST("/:key", serverErr)
 	r.GET("/", serverErr)
-	r.POST("/api/shorten", handleApiPOST)
+	r.POST("/api/shorten", handleAPIPOST)
 	r.GET("/api/:key", serverErr)
 	return r
 }
