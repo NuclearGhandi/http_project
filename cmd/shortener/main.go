@@ -67,7 +67,7 @@ func addURL(url string) string {
 	key := randSeq(8)
 	rnt.keytoURLMap[key] = url
 	outURL := cfg.BaseURL + "/" + key
-	fmt.Println(outURL)
+	fmt.Println("map key", outURL, "value", url)
 	return outURL
 }
 func handleGET(c *gin.Context) {
