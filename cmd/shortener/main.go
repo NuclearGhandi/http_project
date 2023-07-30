@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/caarlos0/env"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -46,7 +47,6 @@ func ServerInit() {
 	flag.Parse()
 	cfg.ServerAddress = *serverAddressPointer
 	cfg.BaseURL = *baseURLPointer
-	//fmt.Println(cfg.ServerAddress, "\n", cfg.BaseURL)
 	err = env.Parse(&cfg)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "server init")
@@ -135,11 +135,12 @@ func Logger() gin.HandlerFunc {
 		)
 	}
 }
+
 func setupRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(Logger())
 	r.Use(gin.Recovery())
-
+	r.Use(gzip.Gzip(gzip.DefaultCompression))
 	r.GET("/:key", handleGET)
 	r.POST("/", handlePOST)
 
