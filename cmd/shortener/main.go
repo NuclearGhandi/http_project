@@ -92,7 +92,7 @@ func handlePOST(c *gin.Context) {
 	}
 }
 func handleAPIPOST(c *gin.Context) {
-	fmt.Println("API")
+	//fmt.Println("API")
 	var inpt inputJSON
 	var outpt outputJSON
 	body, err := c.GetRawData()
@@ -124,12 +124,14 @@ func Logger() gin.HandlerFunc {
 		c.Next()
 		method := c.Request.Method
 		uri := c.Param("key")
+		header := c.Request.Header
 		duration := time.Since(t)
 		status := c.Writer.Status()
 		size := c.Writer.Size()
 		rnt.sugar.Infoln(
 			"uri", uri,
 			"method", method,
+			"header", header,
 			"status", status,
 			"duration", duration,
 			"size", size,
@@ -141,7 +143,8 @@ func setupRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(Logger())
 	r.Use(gin.Recovery())
-	r.Use(gzip.Gzip(gzip.DefaultCompression))
+	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithDecompressFn(gzip.DefaultDecompressHandle)))
+
 	r.GET("/:key", handleGET)
 	r.POST("/", handlePOST)
 
