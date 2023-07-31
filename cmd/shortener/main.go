@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/caarlos0/env"
-	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -143,7 +142,7 @@ func setupRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(Logger())
 	r.Use(gin.Recovery())
-	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithDecompressFn(gzip.DefaultDecompressHandle)))
+	r.Use(Gzip(DefaultCompression))
 
 	r.GET("/:key", handleGET)
 	r.POST("/", handlePOST)
