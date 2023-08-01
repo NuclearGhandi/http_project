@@ -55,7 +55,7 @@ func MapInit() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	scanner = bufio.NewScanner(rnt.file)
+	scanner = bufio.NewScanner(file)
 
 	for scanner.Scan() {
 		data := scanner.Bytes()
@@ -81,6 +81,9 @@ func FileWrite(shortURL string, originalURL string) {
 		log.Fatal(err)
 	}
 	file, err = os.OpenFile(cfg.FileStoragePath, cfg.flagsWrtie, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
 	_, err = file.Write(data)
 	if err != nil {
 		log.Fatal(err)
