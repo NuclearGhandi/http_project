@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/caarlos0/env"
@@ -14,13 +17,23 @@ import (
 )
 
 type Config struct {
-	ServerAddress string `env:"SERVER_ADDRESS"`
-	BaseURL       string `env:"BASE_URL"`
+	ServerAddress   string `env:"SERVER_ADDRESS"`
+	BaseURL         string `env:"BASE_URL"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"`
+	flagsRead       int
+	flagsWrtie      int
 }
 
 type Runtime struct {
 	keytoURLMap map[string]string
 	sugar       zap.SugaredLogger
+	fileLen     int
+}
+
+type fileJSON struct {
+	uuid        int    `json:"uuid"`
+	shortURL    string `json:"short_url"`
+	originalURL string `json:"original_url"`
 }
 
 type inputJSON struct {
@@ -33,7 +46,58 @@ type outputJSON struct {
 var cfg Config
 var rnt Runtime
 
+func MapInit() {
+	var file *os.File
+	var scanner *bufio.Scanner
+	var err error
+	var buf fileJSON
+	file, err = os.OpenFile(cfg.FileStoragePath, cfg.flagsRead, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	scanner = bufio.NewScanner(rnt.file)
+
+	for scanner.Scan() {
+		data := scanner.Bytes()
+		if err = json.Unmarshal(data, &buf); err != nil {
+			fmt.Println(err)
+		}
+		rnt.fileLen = buf.uuid
+		rnt.keytoURLMap[buf.shortURL] = buf.originalURL
+	}
+	file.Close()
+}
+
+func FileWrite(shortURL string, originalURL string) {
+	var file *os.File
+	var outpt fileJSON
+	outpt.originalURL = originalURL
+	outpt.shortURL = shortURL
+	outpt.uuid = rnt.fileLen
+	rnt.fileLen++
+	data, err := json.Marshal(outpt)
+	data = append(data, '\n')
+	if err != nil {
+		log.Fatal(err)
+	}
+	file, err = os.OpenFile(cfg.FileStoragePath, cfg.flagsWrtie, 0666)
+	_, err = file.Write(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	file.Close()
+}
+
 func ServerInit() {
+	serverAddressPointer := flag.String("a", ":8080", "Server Address")
+	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
+	FileStoragePathPointer := flag.String("f", "/tmp/short-url-db.json", "File Path")
+	cfg.ServerAddress = *serverAddressPointer
+	cfg.BaseURL = *baseURLPointer
+	cfg.FileStoragePath = *FileStoragePathPointer
+	cfg.flagsRead = os.O_RDONLY | os.O_CREATE
+	cfg.flagsWrtie = os.O_WRONLY | os.O_CREATE
+	MapInit()
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
@@ -41,11 +105,9 @@ func ServerInit() {
 	defer logger.Sync()
 	rnt.sugar = *logger.Sugar()
 	rand.Seed(time.Now().UnixNano())
-	serverAddressPointer := flag.String("a", ":8080", "Server Address")
-	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
+
 	flag.Parse()
-	cfg.ServerAddress = *serverAddressPointer
-	cfg.BaseURL = *baseURLPointer
+
 	err = env.Parse(&cfg)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "server init")
@@ -91,7 +153,6 @@ func handlePOST(c *gin.Context) {
 	}
 }
 func handleAPIPOST(c *gin.Context) {
-	//fmt.Println("API")
 	var inpt inputJSON
 	var outpt outputJSON
 	body, err := c.GetRawData()
