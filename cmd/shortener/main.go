@@ -31,9 +31,9 @@ type Runtime struct {
 }
 
 type fileJSON struct {
-	uuid        int    `json:"uuid"`
-	shortURL    string `json:"short_url"`
-	originalURL string `json:"original_url"`
+	UUID        int    `json:"uuid,string"`
+	ShortURL    string `json:"short_url,string"`
+	OriginalURL string `json:"original_url,string"`
 }
 
 type inputJSON struct {
@@ -46,6 +46,16 @@ type outputJSON struct {
 var cfg Config
 var rnt Runtime
 
+func FileInit() {
+	var file *os.File
+	var err error
+	file, err = os.OpenFile(cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+		fmt.Println("init_err")
+	}
+	file.Close()
+}
 func MapInit() {
 	var file *os.File
 	var scanner *bufio.Scanner
@@ -62,8 +72,8 @@ func MapInit() {
 		if err = json.Unmarshal(data, &buf); err != nil {
 			fmt.Println(err)
 		}
-		rnt.fileLen = buf.uuid
-		rnt.keytoURLMap[buf.shortURL] = buf.originalURL
+		rnt.fileLen = buf.UUID
+		rnt.keytoURLMap[buf.ShortURL] = buf.OriginalURL
 	}
 	file.Close()
 }
@@ -71,16 +81,16 @@ func MapInit() {
 func FileWrite(shortURL string, originalURL string) {
 	var file *os.File
 	var outpt fileJSON
-	outpt.originalURL = originalURL
-	outpt.shortURL = shortURL
-	outpt.uuid = rnt.fileLen
+	outpt.OriginalURL = originalURL
+	outpt.ShortURL = shortURL
+	outpt.UUID = rnt.fileLen
 	rnt.fileLen++
 	data, err := json.Marshal(outpt)
 	data = append(data, '\n')
 	if err != nil {
 		log.Fatal(err)
 	}
-	file, err = os.OpenFile(cfg.FileStoragePath, cfg.flagsWrtie, 0666)
+	file, err = os.OpenFile(cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -92,15 +102,6 @@ func FileWrite(shortURL string, originalURL string) {
 }
 
 func ServerInit() {
-	serverAddressPointer := flag.String("a", ":8080", "Server Address")
-	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
-	FileStoragePathPointer := flag.String("f", "/tmp/short-url-db.json", "File Path")
-	cfg.ServerAddress = *serverAddressPointer
-	cfg.BaseURL = *baseURLPointer
-	cfg.FileStoragePath = *FileStoragePathPointer
-	cfg.flagsRead = os.O_RDONLY | os.O_CREATE
-	cfg.flagsWrtie = os.O_WRONLY | os.O_CREATE
-	MapInit()
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
@@ -108,13 +109,22 @@ func ServerInit() {
 	defer logger.Sync()
 	rnt.sugar = *logger.Sugar()
 	rand.Seed(time.Now().UnixNano())
-
+	serverAddressPointer := flag.String("a", ":8080", "Server Address")
+	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
+	FileStoragePathPointer := flag.String("f", "tmp/short-url-db.json", "File Path")
 	flag.Parse()
-
+	cfg.ServerAddress = *serverAddressPointer
+	cfg.BaseURL = *baseURLPointer
+	cfg.FileStoragePath = *FileStoragePathPointer
 	err = env.Parse(&cfg)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "server init")
 	}
+	cfg.flagsRead = os.O_RDONLY | os.O_CREATE
+	cfg.flagsWrtie = os.O_WRONLY | os.O_CREATE | os.O_APPEND
+	FileInit()
+	MapInit()
+
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
