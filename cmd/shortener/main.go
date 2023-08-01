@@ -236,10 +236,8 @@ func serverErr(c *gin.Context) {
 	c.AbortWithStatus(http.StatusBadRequest)
 }
 func main() {
-
-	ServerInit()
 	rnt.keytoURLMap = make(map[string]string)
-
+	ServerInit()
 	r := setupRouter()
 	r.Run(cfg.ServerAddress)
 }
