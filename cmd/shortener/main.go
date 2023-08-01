@@ -79,26 +79,28 @@ func MapInit() {
 }
 
 func FileWrite(shortURL string, originalURL string) {
-	var file *os.File
-	var outpt fileJSON
-	outpt.OriginalURL = originalURL
-	outpt.ShortURL = shortURL
-	outpt.UUID = rnt.fileLen
-	rnt.fileLen++
-	data, err := json.Marshal(outpt)
-	data = append(data, '\n')
-	if err != nil {
-		log.Fatal(err)
+	if cfg.FileStoragePath != "" {
+		var file *os.File
+		var outpt fileJSON
+		outpt.OriginalURL = originalURL
+		outpt.ShortURL = shortURL
+		outpt.UUID = rnt.fileLen
+		rnt.fileLen++
+		data, err := json.Marshal(outpt)
+		data = append(data, '\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+		file, err = os.OpenFile(cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, err = file.Write(data)
+		if err != nil {
+			log.Fatal(err)
+		}
+		file.Close()
 	}
-	file, err = os.OpenFile(cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = file.Write(data)
-	if err != nil {
-		log.Fatal(err)
-	}
-	file.Close()
 }
 
 func ServerInit() {
@@ -111,7 +113,7 @@ func ServerInit() {
 	rand.Seed(time.Now().UnixNano())
 	serverAddressPointer := flag.String("a", ":8080", "Server Address")
 	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
-	FileStoragePathPointer := flag.String("f", "tmp/short-url-db.json", "File Path")
+	FileStoragePathPointer := flag.String("f", "/tmp/short-url-db.json", "File Path")
 	flag.Parse()
 	cfg.ServerAddress = *serverAddressPointer
 	cfg.BaseURL = *baseURLPointer
@@ -122,9 +124,10 @@ func ServerInit() {
 	}
 	cfg.flagsRead = os.O_RDONLY | os.O_CREATE
 	cfg.flagsWrtie = os.O_WRONLY | os.O_CREATE | os.O_APPEND
-	FileInit()
-	MapInit()
-
+	if cfg.FileStoragePath != "" {
+		FileInit()
+		MapInit()
+	}
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
