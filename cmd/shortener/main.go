@@ -143,6 +143,7 @@ func randSeq(n int) string {
 func addURL(url string) string {
 	key := randSeq(8)
 	rnt.keytoURLMap[key] = url
+	FileWrite(key, url)
 	outURL := cfg.BaseURL + "/" + key
 	fmt.Println("map key", outURL, "value", url)
 	return outURL
