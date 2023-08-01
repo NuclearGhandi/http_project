@@ -3,7 +3,7 @@ package main
 import (
 	"compress/gzip"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -50,7 +50,7 @@ func newGzipHandler(level int) *gzipHandler {
 	handler := &gzipHandler{
 		gzPool: sync.Pool{
 			New: func() interface{} {
-				gz, err := gzip.NewWriterLevel(ioutil.Discard, level)
+				gz, err := gzip.NewWriterLevel(io.Discard, level)
 				if err != nil {
 					panic(err)
 				}
@@ -73,7 +73,7 @@ func (g *gzipHandler) Handle(c *gin.Context) {
 
 	gz := g.gzPool.Get().(*gzip.Writer)
 	defer g.gzPool.Put(gz)
-	defer gz.Reset(ioutil.Discard)
+	defer gz.Reset(io.Discard)
 	gz.Reset(c.Writer)
 
 	c.Header("Content-Encoding", "gzip")
