@@ -56,7 +56,6 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	defer rnt.db.Close()
 }
 
 func FileInit() {
@@ -263,6 +262,7 @@ func serverErr(c *gin.Context) {
 func main() {
 	rnt.keytoURLMap = make(map[string]string)
 	ServerInit()
+	defer rnt.db.Close()
 	r := setupRouter()
 	r.Run(cfg.ServerAddress)
 
