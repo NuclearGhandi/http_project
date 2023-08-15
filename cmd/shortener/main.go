@@ -206,11 +206,13 @@ func handelePING(c *gin.Context) {
 	if rnt.db != nil {
 		err := rnt.db.Ping()
 		if err != nil {
+			fmt.Println(err)
 			c.Status(http.StatusInternalServerError)
 		} else {
 			c.Status(http.StatusOK)
 		}
 	} else {
+		fmt.Println("u are stupid")
 		c.Status(http.StatusInternalServerError)
 	}
 
