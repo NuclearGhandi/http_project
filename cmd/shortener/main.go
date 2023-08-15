@@ -15,7 +15,7 @@ import (
 
 	"github.com/caarlos0/env"
 	"github.com/gin-gonic/gin"
-	_ "github.com/jackc/pgx"
+	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 )
 
