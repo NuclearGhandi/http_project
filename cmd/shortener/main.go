@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"flag"
-	"fmt"
-	"log"
+
+	//	"fmt"
+	//	"log"
+	"database/sql"
 	"math/rand"
 	"net/http"
 	"os"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/caarlos0/env"
 	"github.com/gin-gonic/gin"
+	_ "github.com/jackc/pgx"
 	"go.uber.org/zap"
 )
 
@@ -20,14 +23,14 @@ type Config struct {
 	ServerAddress   string `env:"SERVER_ADDRESS"`
 	BaseURL         string `env:"BASE_URL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
-	flagsRead       int
-	flagsWrtie      int
+	DatabaseDSN     string `env:"DATABASE_DSN"`
 }
 
 type Runtime struct {
 	keytoURLMap map[string]string
 	sugar       zap.SugaredLogger
 	fileLen     int
+	db          *sql.DB
 }
 
 type fileJSON struct {
@@ -46,13 +49,21 @@ type outputJSON struct {
 var cfg Config
 var rnt Runtime
 
+func DatabaseInit() {
+	buf, err := sql.Open("postgres", cfg.DatabaseDSN)
+	rnt.db = buf
+	if err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
+	}
+	defer rnt.db.Close()
+}
+
 func FileInit() {
 	var file *os.File
 	var err error
 	file, err = os.OpenFile(cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatal(err)
-		fmt.Println("init_err")
+		rnt.sugar.Fatalw(err.Error(), "event", "FileInit")
 	}
 	file.Close()
 }
@@ -61,16 +72,16 @@ func MapInit() {
 	var scanner *bufio.Scanner
 	var err error
 	var buf fileJSON
-	file, err = os.OpenFile(cfg.FileStoragePath, cfg.flagsRead, 0666)
+	file, err = os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		log.Fatal(err)
+		rnt.sugar.Fatalw(err.Error(), "event", "FileReadOpen")
 	}
 	scanner = bufio.NewScanner(file)
 
 	for scanner.Scan() {
 		data := scanner.Bytes()
 		if err = json.Unmarshal(data, &buf); err != nil {
-			fmt.Println(err)
+			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
 		rnt.fileLen = buf.UUID
 		rnt.keytoURLMap[buf.ShortURL] = buf.OriginalURL
@@ -79,28 +90,26 @@ func MapInit() {
 }
 
 func FileWrite(shortURL string, originalURL string) {
-	if cfg.FileStoragePath != "" {
-		var file *os.File
-		var outpt fileJSON
-		outpt.OriginalURL = originalURL
-		outpt.ShortURL = shortURL
-		outpt.UUID = rnt.fileLen
-		rnt.fileLen++
-		data, err := json.Marshal(outpt)
-		data = append(data, '\n')
-		if err != nil {
-			log.Fatal(err)
-		}
-		file, err = os.OpenFile(cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-		if err != nil {
-			log.Fatal(err)
-		}
-		_, err = file.Write(data)
-		if err != nil {
-			log.Fatal(err)
-		}
-		file.Close()
+	var file *os.File
+	var outpt fileJSON
+	outpt.OriginalURL = originalURL
+	outpt.ShortURL = shortURL
+	outpt.UUID = rnt.fileLen
+	rnt.fileLen++
+	data, err := json.Marshal(outpt)
+	if err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "FileMarshal")
 	}
+	data = append(data, '\n')
+	file, err = os.OpenFile(cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "FileWriteOpen")
+	}
+	_, err = file.Write(data)
+	if err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "FileWrite")
+	}
+	file.Close()
 }
 
 func ServerInit() {
@@ -114,19 +123,22 @@ func ServerInit() {
 	serverAddressPointer := flag.String("a", ":8080", "Server Address")
 	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
 	FileStoragePathPointer := flag.String("f", "/tmp/short-url-db.json", "File Path")
+	DatabaseDSNPointer := flag.String("f", "", "Database DSN")
 	flag.Parse()
 	cfg.ServerAddress = *serverAddressPointer
 	cfg.BaseURL = *baseURLPointer
 	cfg.FileStoragePath = *FileStoragePathPointer
+	cfg.DatabaseDSN = *DatabaseDSNPointer
 	err = env.Parse(&cfg)
 	if err != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "server init")
+		rnt.sugar.Fatalw(err.Error(), "event", "ServerInit")
 	}
-	cfg.flagsRead = os.O_RDONLY | os.O_CREATE
-	cfg.flagsWrtie = os.O_WRONLY | os.O_CREATE | os.O_APPEND
 	if cfg.FileStoragePath != "" {
 		FileInit()
 		MapInit()
+	}
+	if cfg.DatabaseDSN != "" {
+		DatabaseInit()
 	}
 }
 
@@ -143,9 +155,10 @@ func randSeq(n int) string {
 func addURL(url string) string {
 	key := randSeq(8)
 	rnt.keytoURLMap[key] = url
-	FileWrite(key, url)
+	if cfg.FileStoragePath != "" {
+		FileWrite(key, url)
+	}
 	outURL := cfg.BaseURL + "/" + key
-	fmt.Println("map key", outURL, "value", url)
 	return outURL
 }
 func handleGET(c *gin.Context) {
@@ -174,24 +187,28 @@ func handleAPIPOST(c *gin.Context) {
 	var outpt outputJSON
 	body, err := c.GetRawData()
 	if err != nil {
-		fmt.Println("API_body_get_err")
 		serverErr(c)
 	}
 	if err = json.Unmarshal(body, &inpt); err != nil {
-		fmt.Println("API_Unmsrshall_err")
-		fmt.Println(err)
 		serverErr(c)
 	}
 	outpt.URL = addURL(inpt.URL)
 	resp, err := json.Marshal(outpt)
 	if err != nil {
-		fmt.Println("API_Marshall_err")
 		serverErr(c)
 	} else {
 		c.Data(http.StatusCreated, "application/json", resp)
 	}
 }
+func handelePING(c *gin.Context) {
+	/* if databaseOK {
+		c.Status(http.StatusOK)
+	}else{
+		c.Status(http.StatusInternalServerError)
+	}
+	*/
 
+}
 func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
@@ -240,4 +257,5 @@ func main() {
 	ServerInit()
 	r := setupRouter()
 	r.Run(cfg.ServerAddress)
+
 }
