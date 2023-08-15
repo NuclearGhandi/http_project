@@ -123,7 +123,7 @@ func ServerInit() {
 	serverAddressPointer := flag.String("a", ":8080", "Server Address")
 	baseURLPointer := flag.String("b", "http://localhost:8080", "Base URL")
 	FileStoragePathPointer := flag.String("f", "/tmp/short-url-db.json", "File Path")
-	DatabaseDSNPointer := flag.String("f", "", "Database DSN")
+	DatabaseDSNPointer := flag.String("d", "", "Database DSN")
 	flag.Parse()
 	cfg.ServerAddress = *serverAddressPointer
 	cfg.BaseURL = *baseURLPointer
@@ -201,12 +201,11 @@ func handleAPIPOST(c *gin.Context) {
 	}
 }
 func handelePING(c *gin.Context) {
-	/* if databaseOK {
+	if rnt.db.Ping() == nil {
 		c.Status(http.StatusOK)
-	}else{
+	} else {
 		c.Status(http.StatusInternalServerError)
 	}
-	*/
 
 }
 func Logger() gin.HandlerFunc {
@@ -241,7 +240,7 @@ func setupRouter() *gin.Engine {
 
 	r.GET("/:key", handleGET)
 	r.POST("/", handlePOST)
-
+	r.GET("/ping", handelePING)
 	r.POST("/:key", serverErr)
 	r.GET("/", serverErr)
 	r.POST("/api/shorten", handleAPIPOST)
