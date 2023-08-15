@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"flag"
+	"fmt"
 
 	//	"fmt"
 	//	"log"
@@ -138,6 +139,7 @@ func ServerInit() {
 		MapInit()
 	}
 	if cfg.DatabaseDSN != "" {
+		fmt.Println("DB INIT")
 		DatabaseInit()
 	}
 }
@@ -201,8 +203,13 @@ func handleAPIPOST(c *gin.Context) {
 	}
 }
 func handelePING(c *gin.Context) {
-	if rnt.db.Ping() == nil {
-		c.Status(http.StatusOK)
+	if rnt.db != nil {
+		err := rnt.db.Ping()
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+		} else {
+			c.Status(http.StatusOK)
+		}
 	} else {
 		c.Status(http.StatusInternalServerError)
 	}
