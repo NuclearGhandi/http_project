@@ -134,8 +134,8 @@ func ServerInit() {
 		rnt.sugar.Fatalw(err.Error(), "event", "ServerInit")
 	}
 	if cfg.FileStoragePath != "" {
-		FileInit()
-		MapInit()
+		//FileInit()
+		//MapInit()
 	}
 	if cfg.DatabaseDSN != "" {
 		DatabaseInit()
