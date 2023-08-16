@@ -60,10 +60,12 @@ func DatabaseInit() {
 	}
 	rnt.db.Exec("CREATE TABLE IF NOT EXISTS movies  ( \"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
 }
+
 func dbWriteURL(key string, url string) {
 	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES (%s, %s)", key, url)
 	fmt.Println(key, url)
 	fmt.Println(dbReadURL(key))
+
 }
 
 func dbReadURL(key string) string {
@@ -76,6 +78,29 @@ func dbReadURL(key string) string {
 	}
 	return url
 }
+
+func FileDBTransfer() {
+	var file *os.File
+	var scanner *bufio.Scanner
+	var err error
+	var buf fileJSON
+	file, err = os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "FileReadOpen")
+	}
+	scanner = bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		data := scanner.Bytes()
+		if err = json.Unmarshal(data, &buf); err != nil {
+			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
+		}
+		rnt.fileLen = buf.UUID
+		dbWriteURL(buf.ShortURL, buf.OriginalURL)
+	}
+	file.Close()
+}
+
 func FileInit() {
 	var file *os.File
 	var err error
@@ -154,6 +179,10 @@ func ServerInit() {
 	if cfg.DatabaseDSN != "" {
 		cfg.typeOfStorage = "db"
 		DatabaseInit()
+		if cfg.FileStoragePath != "" {
+			FileInit()
+			FileDBTransfer()
+		}
 	} else if cfg.FileStoragePath != "" {
 		cfg.typeOfStorage = "file"
 		FileInit()
@@ -163,7 +192,7 @@ func ServerInit() {
 	}
 	fmt.Println(cfg.DatabaseDSN)
 	fmt.Println(cfg.typeOfStorage)
-
+	fmt.Println(cfg.FileStoragePath)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
