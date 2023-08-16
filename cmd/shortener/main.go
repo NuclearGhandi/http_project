@@ -48,6 +48,11 @@ type outputJSON struct {
 	URL string `json:"result"`
 }
 
+type DBWrite struct {
+	seq string
+	URL string
+}
+
 var cfg Config
 var rnt Runtime
 
@@ -62,7 +67,7 @@ func DatabaseInit() {
 }
 
 func dbWriteURL(key string, url string) {
-	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES (%s, %s)", key, url)
+	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES (?, ?)", key, url)
 	fmt.Println(key, url)
 	fmt.Println(dbReadURL(key))
 
@@ -71,7 +76,7 @@ func dbWriteURL(key string, url string) {
 func dbReadURL(key string) string {
 	var url string
 	row := rnt.db.QueryRow(
-		"SELECT URL FROM shorted WHERE seq = %s", key)
+		"SELECT URL FROM shorted WHERE seq = ?", key)
 	err := row.Scan(&url)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "dbRead")
