@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"flag"
-	"fmt"
 
 	//	"fmt"
 	//	"log"
@@ -21,6 +20,7 @@ import (
 )
 
 type Config struct {
+	typeOfStorage   string
 	ServerAddress   string `env:"SERVER_ADDRESS"`
 	BaseURL         string `env:"BASE_URL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
@@ -56,8 +56,24 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
+	if rnt.db.QueryRow("SELECT URL FROM shorted") == nil {
+		rnt.db.Exec("CREATE TABLE movies ( \"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
+	}
+}
+func dbWriteURL(key string, url string) {
+	//	rnt.db.Exec
 }
 
+func dbReadURL(key string) string {
+	var url string
+	row := rnt.db.QueryRow(
+		"SELECT URL FROM shorted WHERE seq = %s", key)
+	err := row.Scan(&url)
+	if err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "dbRead")
+	}
+	return ""
+}
 func FileInit() {
 	var file *os.File
 	var err error
@@ -133,14 +149,17 @@ func ServerInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "ServerInit")
 	}
-	if cfg.FileStoragePath != "" {
+	if cfg.DatabaseDSN != "" {
+		cfg.typeOfStorage = "db"
+		DatabaseInit()
+	} else if cfg.FileStoragePath != "" {
+		cfg.typeOfStorage = "file"
 		FileInit()
 		MapInit()
+	} else {
+		cfg.typeOfStorage = "map"
 	}
-	if cfg.DatabaseDSN != "" {
-		fmt.Println("DB INIT")
-		DatabaseInit()
-	}
+
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -155,9 +174,14 @@ func randSeq(n int) string {
 
 func addURL(url string) string {
 	key := randSeq(8)
-	rnt.keytoURLMap[key] = url
-	if cfg.FileStoragePath != "" {
+	if cfg.typeOfStorage == "file" || cfg.typeOfStorage == "map" {
+		rnt.keytoURLMap[key] = url
+	}
+	if cfg.typeOfStorage == "file" {
 		FileWrite(key, url)
+	}
+	if cfg.typeOfStorage == "db" {
+		dbWriteURL(key, url)
 	}
 	outURL := cfg.BaseURL + "/" + key
 	return outURL
@@ -205,13 +229,11 @@ func handelePING(c *gin.Context) {
 	if rnt.db != nil {
 		err := rnt.db.Ping()
 		if err != nil {
-			fmt.Println(err)
 			c.Status(http.StatusInternalServerError)
 		} else {
 			c.Status(http.StatusOK)
 		}
 	} else {
-		fmt.Println("u are stupid")
 		c.Status(http.StatusInternalServerError)
 	}
 
