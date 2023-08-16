@@ -50,6 +50,7 @@ func Decompress(data []byte) ([]byte, error) {
 func TServerInit() {
 	cfg.ServerAddress = ":8080"
 	cfg.BaseURL = "http://localhost:8080"
+	cfg.typeOfStorage = "map"
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
