@@ -67,7 +67,7 @@ func DatabaseInit() {
 }
 
 func dbWriteURL(key string, url string) {
-	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES (?, ?)", key, url)
+	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES ($1, $2)", key, url)
 	fmt.Println(key, url)
 	fmt.Println(dbReadURL(key))
 
@@ -76,7 +76,7 @@ func dbWriteURL(key string, url string) {
 func dbReadURL(key string) string {
 	var url string
 	row := rnt.db.QueryRow(
-		"SELECT URL FROM shorted WHERE seq = ?", key)
+		"SELECT URL FROM shorted WHERE seq = $1", key)
 	err := row.Scan(&url)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "dbRead")
