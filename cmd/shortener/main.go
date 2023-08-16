@@ -62,6 +62,8 @@ func DatabaseInit() {
 }
 func dbWriteURL(key string, url string) {
 	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES (%s, %s)", key, url)
+	fmt.Println(key, url)
+	fmt.Println(dbReadURL(key))
 }
 
 func dbReadURL(key string) string {
@@ -181,6 +183,7 @@ func addURL(url string) string {
 		FileWrite(key, url)
 	}
 	if cfg.typeOfStorage == "db" {
+		fmt.Println("db write")
 		dbWriteURL(key, url)
 	}
 	outURL := cfg.BaseURL + "/" + key
@@ -212,7 +215,9 @@ func handlePOST(c *gin.Context) {
 		if err != nil {
 			serverErr(c)
 		} else {
-			c.String(http.StatusCreated, addURL(string(body)))
+			if cfg.typeOfStorage != "db" {
+				c.String(http.StatusCreated, addURL(string(body)))
+			}
 		}
 	}
 }
