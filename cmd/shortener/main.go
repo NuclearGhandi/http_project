@@ -58,7 +58,7 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	rnt.db.Exec("CREATE TABLE movies ( \"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
+	rnt.db.Exec("CREATE TABLE IF NOT EXISTS movies  ( \"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
 }
 func dbWriteURL(key string, url string) {
 	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES (%s, %s)", key, url)
