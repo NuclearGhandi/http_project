@@ -161,6 +161,8 @@ func ServerInit() {
 	} else {
 		cfg.typeOfStorage = "map"
 	}
+	fmt.Println(cfg.DatabaseDSN)
+	fmt.Println(cfg.typeOfStorage)
 
 }
 
