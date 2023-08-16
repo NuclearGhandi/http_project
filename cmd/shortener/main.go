@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"flag"
+	"fmt"
 
 	//	"fmt"
 	//	"log"
@@ -53,12 +54,11 @@ var rnt Runtime
 func DatabaseInit() {
 	buf, err := sql.Open("postgres", cfg.DatabaseDSN)
 	rnt.db = buf
+	fmt.Println("DB Init")
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	if rnt.db.QueryRow("SELECT URL FROM shorted") == nil {
-		rnt.db.Exec("CREATE TABLE movies ( \"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
-	}
+	rnt.db.Exec("CREATE TABLE movies ( \"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
 }
 func dbWriteURL(key string, url string) {
 	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES (%s, %s)", key, url)
@@ -72,7 +72,7 @@ func dbReadURL(key string) string {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "dbRead")
 	}
-	return ""
+	return url
 }
 func FileInit() {
 	var file *os.File
@@ -188,21 +188,21 @@ func addURL(url string) string {
 }
 func handleGET(c *gin.Context) {
 	key := c.Param("key")
-	if cfg.typeOfStorage == "map" || cfg.typeOfStorage == "file" {
-		url, ok := rnt.keytoURLMap[key]
-		if ok {
-			c.Redirect(http.StatusTemporaryRedirect, url)
-		} else {
-			serverErr(c)
-		}
-	} else if cfg.typeOfStorage == "db" {
-		url := dbReadURL(key)
-		if url != "" {
-			c.Redirect(http.StatusTemporaryRedirect, url)
-		} else {
-			serverErr(c)
-		}
+	//if cfg.typeOfStorage == "map" || cfg.typeOfStorage == "file" {
+	url, ok := rnt.keytoURLMap[key]
+	if ok {
+		c.Redirect(http.StatusTemporaryRedirect, url)
+	} else {
+		serverErr(c)
 	}
+	//} else if cfg.typeOfStorage == "db" {
+	//	url := dbReadURL(key)
+	//	if url != "" {
+	//		c.Redirect(http.StatusTemporaryRedirect, url)
+	//	} else {
+	//		serverErr(c)
+	//	}
+	//}
 }
 func handlePOST(c *gin.Context) {
 	if c.Param("key") != "" {
