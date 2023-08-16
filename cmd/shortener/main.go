@@ -61,7 +61,7 @@ func DatabaseInit() {
 	}
 }
 func dbWriteURL(key string, url string) {
-	//	rnt.db.Exec
+	rnt.db.Exec("INSERT INTO shorted (seq, url) VALUES (%s, %s)", key, url)
 }
 
 func dbReadURL(key string) string {
@@ -188,11 +188,20 @@ func addURL(url string) string {
 }
 func handleGET(c *gin.Context) {
 	key := c.Param("key")
-	url, ok := rnt.keytoURLMap[key]
-	if ok {
-		c.Redirect(http.StatusTemporaryRedirect, url)
-	} else {
-		serverErr(c)
+	if cfg.typeOfStorage == "map" || cfg.typeOfStorage == "file" {
+		url, ok := rnt.keytoURLMap[key]
+		if ok {
+			c.Redirect(http.StatusTemporaryRedirect, url)
+		} else {
+			serverErr(c)
+		}
+	} else if cfg.typeOfStorage == "db" {
+		url := dbReadURL(key)
+		if url != "" {
+			c.Redirect(http.StatusTemporaryRedirect, url)
+		} else {
+			serverErr(c)
+		}
 	}
 }
 func handlePOST(c *gin.Context) {
@@ -287,5 +296,4 @@ func main() {
 	defer rnt.db.Close()
 	r := setupRouter()
 	r.Run(cfg.ServerAddress)
-
 }
