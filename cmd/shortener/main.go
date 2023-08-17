@@ -33,7 +33,6 @@ type Runtime struct {
 	sugar       zap.SugaredLogger
 	fileLen     int
 	db          *sql.DB
-	dbID        int
 }
 
 type fileJSON struct {
@@ -53,32 +52,20 @@ var cfg Config
 var rnt Runtime
 
 func DatabaseInit() {
-	var id int
 	buf, err := sql.Open("postgres", cfg.DatabaseDSN)
 	rnt.db = buf
 	fmt.Println("DB Init")
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (\"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
+	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (\"seq\" TEXT PRIMARY KEY, \"url\" TEXT)")
 	if errr != nil {
 		rnt.sugar.Fatalw(errr.Error(), "event", "dbInit")
-	}
-	row, errr := rnt.db.Query("SELECT * FROM shorted WHERE id=(SELECT MAX(id) FROM shorted)")
-	if errr != nil {
-		rnt.sugar.Fatalw(errr.Error(), "event", "dbInit")
-	}
-	if row != nil {
-		errrr := row.Scan(&id)
-		if errrr != nil {
-			rnt.sugar.Fatalw(errrr.Error(), "event", "dbInit")
-		}
 	}
 }
 
 func dbWriteURL(key string, url string) {
-	rnt.dbID = 1 + rnt.dbID
-	_, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, key, url)
+	_, err := rnt.db.Exec("INSERT INTO shorted ( seq, url) VALUES ($1, $2)", key, url)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "dbWrite")
 	}
