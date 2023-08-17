@@ -60,7 +60,7 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXIST shorted (\"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
+	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (\"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
 	if errr != nil {
 		rnt.sugar.Fatalw(errr.Error(), "event", "dbInit")
 	}
