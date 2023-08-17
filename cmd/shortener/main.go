@@ -60,17 +60,17 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	_, errr := rnt.db.Exec("CREATE TABLE shorted (\"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
+	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXIST shorted (\"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
 	if errr != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "dbInit")
+		rnt.sugar.Fatalw(errr.Error(), "event", "dbInit")
 	}
 	row, errr := rnt.db.Query("SELECT * FROM shorted WHERE id=(SELECT MAX(id) FROM shorted)")
 	if errr != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "dbInit")
+		rnt.sugar.Fatalw(errr.Error(), "event", "dbInit")
 	}
 	errrr := row.Scan(&id)
 	if errrr != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "dbRead")
+		rnt.sugar.Fatalw(errrr.Error(), "event", "dbInit")
 	}
 }
 
@@ -81,7 +81,7 @@ func dbWriteURL(key string, url string) {
 		rnt.sugar.Fatalw(err.Error(), "event", "dbWrite")
 	}
 	fmt.Println(key, url)
-	//fmt.Println(dbReadURL(key))
+	fmt.Println(dbReadURL(key))
 
 }
 
