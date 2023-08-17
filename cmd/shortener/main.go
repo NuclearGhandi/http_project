@@ -63,7 +63,10 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	rnt.db.Exec("CREATE TABLE shorted ( \"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT) RETURNING ")
+	_, errr := rnt.db.Exec("CREATE TABLE shorted ( \"id\" INTEGER PRIMARY KEY,\"seq\" TEXT, \"url\" TEXT)")
+	if errr != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "dbInit")
+	}
 }
 
 func dbWriteURL(key string, url string) {
