@@ -33,7 +33,7 @@ type Runtime struct {
 	sugar       zap.SugaredLogger
 	fileLen     int
 	db          *sql.DB
-	dbId        int
+	dbID        int
 }
 
 type fileJSON struct {
@@ -68,15 +68,17 @@ func DatabaseInit() {
 	if errr != nil {
 		rnt.sugar.Fatalw(errr.Error(), "event", "dbInit")
 	}
-	errrr := row.Scan(&id)
-	if errrr != nil {
-		rnt.sugar.Fatalw(errrr.Error(), "event", "dbInit")
+	if row != nil {
+		errrr := row.Scan(&id)
+		if errrr != nil {
+			rnt.sugar.Fatalw(errrr.Error(), "event", "dbInit")
+		}
 	}
 }
 
 func dbWriteURL(key string, url string) {
-	rnt.dbId = 1 + rnt.dbId
-	_, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbId, key, url)
+	rnt.dbID = 1 + rnt.dbID
+	_, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, key, url)
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "dbWrite")
 	}
