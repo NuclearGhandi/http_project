@@ -60,14 +60,14 @@ func DatabaseInit() {
 	}
 	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (seq VARCHAR(10) PRIMARY KEY, url VARCHAR(2084))")
 	if errr != nil {
-		rnt.sugar.Fatalw(errr.Error(), "event", "dbInit")
+		rnt.sugar.Errorw(errr.Error(), "event", "dbInit")
 	}
 }
 
 func dbWriteURL(key string, url string) {
 	_, err := rnt.db.Exec("INSERT INTO shorted ( seq, url) VALUES ($1, $2)", key, url)
 	if err != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "dbWrite")
+		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
 	}
 	fmt.Println(key, url)
 	fmt.Println(dbReadURL(key))
@@ -80,7 +80,7 @@ func dbReadURL(key string) string {
 		"SELECT URL FROM shorted WHERE seq = $1", key)
 	err := row.Scan(&url)
 	if err != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "dbRead")
+		rnt.sugar.Errorw(err.Error(), "event", "dbRead")
 	}
 	return url
 }
