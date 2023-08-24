@@ -187,7 +187,7 @@ func ServerInit() {
 		DatabaseInit()
 		if cfg.FileStoragePath != "" {
 			FileInit()
-			FileDBTransfer()
+			//FileDBTransfer()
 		}
 	} else if cfg.FileStoragePath != "" {
 		cfg.typeOfStorage = "file"
