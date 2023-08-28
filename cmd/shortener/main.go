@@ -55,6 +55,7 @@ var rnt Runtime
 func DatabaseInit() {
 	buf, err := sql.Open("postgres", cfg.DatabaseDSN)
 	rnt.db = buf
+	rnt.dbID = 0
 	fmt.Println("DB Init")
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
@@ -67,6 +68,7 @@ func DatabaseInit() {
 
 func dbWriteURL(key string, url string) {
 	_, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, key, url)
+	rnt.dbID = rnt.dbID + 1
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
 	}
@@ -103,9 +105,9 @@ func FileDBTransfer() {
 			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
 		rnt.fileLen = buf.UUID
-		rnt.dbID = buf.UUID
 		fmt.Println(buf.UUID, buf.ShortURL, buf.OriginalURL)
 		_, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, buf.ShortURL, buf.OriginalURL)
+		rnt.dbID = rnt.dbID + 1
 		if err != nil {
 			rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
 		}
