@@ -59,20 +59,19 @@ func DatabaseInit() {
 		rnt.sugar.Errorw(err.Error(), "event", "databaseInit")
 	}
 	rnt.db = buf
+	fmt.Println("DB Init")
+	if err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
+	}
+	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (id INTEGER PRIMARY KEY, seq VARCHAR(10), url VARCHAR(2084))")
+	if errr != nil {
+		rnt.sugar.Errorw(errr.Error(), "event", "dbInit")
+	}
 	row := rnt.db.QueryRow("SELECT MAX(id) FROM shorted")
 	err = row.Scan(&buff)
 	rnt.dbID = buff
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "databaseInit")
-	}
-	fmt.Println("DB Init")
-	if err != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
-	}
-	rnt.db.Exec("DELETE FROM shorted;")
-	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (id INTEGER PRIMARY KEY, seq VARCHAR(10), url VARCHAR(2084))")
-	if errr != nil {
-		rnt.sugar.Errorw(errr.Error(), "event", "dbInit")
 	}
 }
 
