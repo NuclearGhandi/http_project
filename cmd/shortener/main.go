@@ -104,7 +104,7 @@ func dbFmt() {
 		rnt.sugar.Errorw(err.Error(), "event", "dbRead")
 	}
 	minID = buf
-	for i := minID; i < maxID; {
+	for i := minID; i <= maxID; i = i + 1 {
 		row = rnt.db.QueryRow("SELECT seq FROM shorted WHERE id = $1", i)
 		err := row.Scan(&URL)
 		if err != nil {
