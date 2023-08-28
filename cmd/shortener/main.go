@@ -134,6 +134,7 @@ func FileDBTransfer() {
 	var scanner *bufio.Scanner
 	var err error
 	var buf fileJSON
+	rnt.fileLen = 0
 	file, err = os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "FileReadOpen")
