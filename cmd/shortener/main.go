@@ -86,6 +86,38 @@ func dbWriteURL(key string, url string) {
 
 }
 
+func dbFmt() {
+	var buf int
+	var URL string
+	var longURL string
+	var maxID int
+	var minID int
+	row := rnt.db.QueryRow("SELECT MAX(id) FROM shorted")
+	err := row.Scan(&buf)
+	if err != nil {
+		rnt.sugar.Errorw(err.Error(), "event", "dbRead")
+	}
+	maxID = buf
+	row = rnt.db.QueryRow("SELECT MIN(id) FROM shorted")
+	err = row.Scan(&buf)
+	if err != nil {
+		rnt.sugar.Errorw(err.Error(), "event", "dbRead")
+	}
+	minID = buf
+	for i := minID; i < maxID; {
+		row = rnt.db.QueryRow("SELECT seq FROM shorted WHERE id = $1", i)
+		err := row.Scan(&URL)
+		if err != nil {
+			rnt.sugar.Errorw(err.Error(), "event", "dbRead")
+		}
+		row = rnt.db.QueryRow("SELECT url FROM shorted WHERE id = $1", i)
+		err = row.Scan(&longURL)
+		if err != nil {
+			rnt.sugar.Errorw(err.Error(), "event", "dbRead")
+		}
+		fmt.Println(i, URL, longURL)
+	}
+}
 func dbReadURL(key string) string {
 	var url string
 	row := rnt.db.QueryRow(
@@ -123,6 +155,7 @@ func FileDBTransfer() {
 		}
 	}
 	file.Close()
+	dbFmt()
 }
 
 func FileInit() {
