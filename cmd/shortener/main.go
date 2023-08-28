@@ -59,7 +59,7 @@ func DatabaseInit() {
 		rnt.sugar.Errorw(err.Error(), "event", "databaseInit")
 	}
 	rnt.db = buf
-	row := rnt.db.QueryRow("SELECT MAX id")
+	row := rnt.db.QueryRow("SELECT MAX(id) FROM shorted")
 	err = row.Scan(&buff)
 	rnt.dbID = buff
 	if err != nil {
