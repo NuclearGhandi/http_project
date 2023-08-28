@@ -53,9 +53,18 @@ var cfg Config
 var rnt Runtime
 
 func DatabaseInit() {
+	var buff int
 	buf, err := sql.Open("postgres", cfg.DatabaseDSN)
+	if err != nil {
+		rnt.sugar.Errorw(err.Error(), "event", "databaseInit")
+	}
 	rnt.db = buf
-	rnt.dbID = 0
+	row := rnt.db.QueryRow("SELECT MAX id")
+	err = row.Scan(&buff)
+	rnt.dbID = buff
+	if err != nil {
+		rnt.sugar.Errorw(err.Error(), "event", "databaseInit")
+	}
 	fmt.Println("DB Init")
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
