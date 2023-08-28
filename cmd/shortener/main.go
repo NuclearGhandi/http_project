@@ -106,7 +106,8 @@ func FileDBTransfer() {
 		}
 		rnt.fileLen = buf.UUID
 		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
-		_, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, buf.ShortURL, buf.OriginalURL)
+		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)`
+		_, err := rnt.db.Exec(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		rnt.dbID = rnt.dbID + 1
 		if err != nil {
 			rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
