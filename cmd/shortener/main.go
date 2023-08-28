@@ -60,6 +60,7 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
+	rnt.db.Exec("DELETE FROM shorted;")
 	_, errr := rnt.db.Exec("CREATE TABLE shorted (id INTEGER PRIMARY KEY, seq VARCHAR(10), url VARCHAR(2084))")
 	if errr != nil {
 		rnt.sugar.Errorw(errr.Error(), "event", "dbInit")
