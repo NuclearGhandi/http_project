@@ -139,7 +139,18 @@ func FileDBTransfer() {
 		rnt.sugar.Errorw(err.Error(), "event", "FileReadOpen")
 	}
 	scanner = bufio.NewScanner(file)
-
+	data := scanner.Bytes()
+	if err = json.Unmarshal(data, &buf); err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
+	}
+	rnt.fileLen = buf.UUID
+	fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
+	sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)`
+	_, err = rnt.db.Exec(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
+	rnt.dbID = rnt.dbID + 1
+	if err != nil {
+		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
+	}
 	for scanner.Scan() {
 		data := scanner.Bytes()
 		if err = json.Unmarshal(data, &buf); err != nil {
