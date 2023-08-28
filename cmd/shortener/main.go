@@ -370,13 +370,13 @@ func setupRouter() *gin.Engine {
 	r.Use(gin.Recovery())
 	r.Use(Gzip(DefaultCompression))
 
-	r.GET("/:key", handleGET)
-	r.POST("/", handlePOST)
+	r.GET("/", serverErr)
 	r.GET("/ping", handelePING)
 	r.POST("/:key", serverErr)
-	r.GET("/", serverErr)
 	r.POST("/api/shorten", handleAPIPOST)
 	r.GET("/api/:key", serverErr)
+	r.GET("/:key", handleGET)
+	r.POST("/", handlePOST)
 	return r
 }
 
