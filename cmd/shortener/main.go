@@ -33,6 +33,7 @@ type Runtime struct {
 	sugar       zap.SugaredLogger
 	fileLen     int
 	db          *sql.DB
+	dbID        int
 }
 
 type fileJSON struct {
@@ -58,14 +59,14 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (seq VARCHAR(10) PRIMARY KEY, url VARCHAR(2084))")
+	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (id INTEGER PRIMARY KEY, seq VARCHAR(10), url VARCHAR(2084))")
 	if errr != nil {
 		rnt.sugar.Errorw(errr.Error(), "event", "dbInit")
 	}
 }
 
 func dbWriteURL(key string, url string) {
-	_, err := rnt.db.Exec("INSERT INTO shorted ( seq, url) VALUES ($1, $2)", key, url)
+	_, err := rnt.db.Exec("INSERT, ON CONFLICT DO NOTHING INTO shorted ( seq, url) VALUES ($1, $2)", key, url)
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
 	}
@@ -92,7 +93,7 @@ func FileDBTransfer() {
 	var buf fileJSON
 	file, err = os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "FileReadOpen")
+		rnt.sugar.Errorw(err.Error(), "event", "FileReadOpen")
 	}
 	scanner = bufio.NewScanner(file)
 
@@ -102,7 +103,12 @@ func FileDBTransfer() {
 			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
 		rnt.fileLen = buf.UUID
-		dbWriteURL(buf.ShortURL, buf.OriginalURL)
+		rnt.dbID = buf.UUID
+		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
+		_, err := rnt.db.Exec("INSERT, ON CONFLICT DO NOTHING INTO shorted (id, seq, url) VALUES ($1, $2)", rnt.dbID, buf.ShortURL, buf.OriginalURL)
+		if err != nil {
+			rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
+		}
 	}
 	file.Close()
 }
@@ -187,7 +193,7 @@ func ServerInit() {
 		DatabaseInit()
 		if cfg.FileStoragePath != "" {
 			FileInit()
-			//FileDBTransfer()
+			FileDBTransfer()
 		}
 	} else if cfg.FileStoragePath != "" {
 		cfg.typeOfStorage = "file"
