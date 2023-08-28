@@ -303,9 +303,7 @@ func handlePOST(c *gin.Context) {
 		if err != nil {
 			serverErr(c)
 		} else {
-			if cfg.typeOfStorage != "db" {
-				c.String(http.StatusCreated, addURL(string(body)))
-			}
+			c.String(http.StatusCreated, addURL(string(body)))
 		}
 	}
 }
