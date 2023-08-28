@@ -66,7 +66,7 @@ func DatabaseInit() {
 }
 
 func dbWriteURL(key string, url string) {
-	_, err := rnt.db.Exec("INSERT, ON CONFLICT DO NOTHING INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, key, url)
+	_, err := rnt.db.Exec("INSERT ON CONFLICT DO NOTHING INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, key, url)
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
 	}
@@ -105,7 +105,7 @@ func FileDBTransfer() {
 		rnt.fileLen = buf.UUID
 		rnt.dbID = buf.UUID
 		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
-		_, err := rnt.db.Exec("INSERT, ON CONFLICT DO NOTHING INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, buf.ShortURL, buf.OriginalURL)
+		_, err := rnt.db.Exec("INSERT ON CONFLICT DO NOTHING INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		if err != nil {
 			rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
 		}
