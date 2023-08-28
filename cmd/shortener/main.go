@@ -146,7 +146,7 @@ func FileDBTransfer() {
 			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
 		rnt.fileLen = rnt.fileLen + 1
-		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
+		//fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)`
 		_, err := rnt.db.Exec(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		rnt.dbID = rnt.dbID + 1
@@ -155,7 +155,7 @@ func FileDBTransfer() {
 		}
 	}
 	file.Close()
-	dbFmt()
+	//dbFmt()
 }
 
 func FileInit() {
@@ -247,9 +247,9 @@ func ServerInit() {
 	} else {
 		cfg.typeOfStorage = "map"
 	}
-	fmt.Println(cfg.DatabaseDSN)
-	fmt.Println(cfg.typeOfStorage)
-	fmt.Println(cfg.FileStoragePath)
+	//fmt.Println(cfg.DatabaseDSN)
+	//fmt.Println(cfg.typeOfStorage)
+	//fmt.Println(cfg.FileStoragePath)
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -271,7 +271,7 @@ func addURL(url string) string {
 		FileWrite(key, url)
 	}
 	if cfg.typeOfStorage == "db" {
-		fmt.Println("db write")
+		//fmt.Println("db write")
 		dbWriteURL(key, url)
 	}
 	outURL := cfg.BaseURL + "/" + key
@@ -386,6 +386,5 @@ func main() {
 	ServerInit()
 	defer rnt.db.Close()
 	r := setupRouter()
-	fmt.Println("Running")
 	r.Run(cfg.ServerAddress)
 }
