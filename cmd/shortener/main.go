@@ -105,7 +105,7 @@ func FileDBTransfer() {
 			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
 		rnt.fileLen = buf.UUID
-		fmt.Println(buf.UUID, buf.ShortURL, buf.OriginalURL)
+		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		_, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		rnt.dbID = rnt.dbID + 1
 		if err != nil {
