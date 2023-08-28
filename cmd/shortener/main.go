@@ -144,7 +144,7 @@ func FileDBTransfer() {
 		if err = json.Unmarshal(data, &buf); err != nil {
 			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
-		rnt.fileLen = buf.UUID
+		rnt.fileLen = rnt.fileLen + 1
 		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)`
 		_, err := rnt.db.Exec(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
