@@ -386,5 +386,6 @@ func main() {
 	ServerInit()
 	defer rnt.db.Close()
 	r := setupRouter()
+	fmt.Println("Running")
 	r.Run(cfg.ServerAddress)
 }
