@@ -86,13 +86,11 @@ func DatabaseInit() {
 }
 
 func dbWriteURL(key string, url string) (string, bool) {
-	rtrn, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id", rnt.dbID, key, url)
+	var id int
+	row := rnt.db.QueryRow("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id", rnt.dbID, key, url)
+	err := row.Scan(&id)
 	if err != nil {
-		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
-	}
-	id, err := rtrn.LastInsertId()
-	if err != nil {
-		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
+		rnt.sugar.Errorw(err.Error(), "event", "dbRead")
 	}
 	fmt.Println(key, url)
 	fmt.Println(dbReadURL(key))
@@ -158,6 +156,7 @@ func FileDBTransfer() {
 	var file *os.File
 	var scanner *bufio.Scanner
 	var err error
+	var id int
 	var buf fileJSON
 	rnt.fileLen = 0
 	file, err = os.OpenFile(cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
@@ -173,12 +172,11 @@ func FileDBTransfer() {
 		rnt.fileLen = rnt.fileLen + 1
 		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT (url) DO UPDATE SET seq = $2 RETURNING id`
-		rsp, err := rnt.db.Exec(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
-
+		row := rnt.db.QueryRow(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
+		err := row.Scan(&id)
 		if err != nil {
-			rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
+			rnt.sugar.Errorw(err.Error(), "event", "dbRead")
 		}
-		id, err := rsp.LastInsertId()
 		if int(id) == rnt.dbID {
 			rnt.dbID = rnt.dbID + 1
 		}
