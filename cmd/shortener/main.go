@@ -87,7 +87,7 @@ func DatabaseInit() {
 
 func dbWriteURL(key string, url string) (string, bool) {
 	var id int
-	row := rnt.db.QueryRow("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT (url) DO UPDATE SET url = EXCLUDED.url RETURNING id", rnt.dbID, key, url)
+	row := rnt.db.QueryRow("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT (url) DO UPDATE SET url = $3 RETURNING id", rnt.dbID, key, url)
 	err := row.Scan(&id)
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "dbRead")
@@ -99,7 +99,7 @@ func dbWriteURL(key string, url string) (string, bool) {
 		return key, false
 	} else {
 		row := rnt.db.QueryRow(
-			"SELECT URL FROM shorted WHERE id = $1", id)
+			"SELECT seq FROM shorted WHERE id = $1", id)
 		err := row.Scan(&key)
 		if err != nil {
 			rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
