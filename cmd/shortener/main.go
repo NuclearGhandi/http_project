@@ -411,6 +411,7 @@ func setupRouter() *gin.Engine {
 	r.GET("/api/:key", serverErr)
 	r.GET("/:key", handleGET)
 	r.POST("/", handlePOST)
+	r.POST("/api/shorten/batch", handleBunch)
 	return r
 }
 
