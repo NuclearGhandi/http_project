@@ -8,6 +8,7 @@ import (
 
 	//	"fmt"
 	//	"log"
+	"bytes"
 	"database/sql"
 	"math/rand"
 	"net/http"
@@ -44,6 +45,14 @@ type fileJSON struct {
 
 type inputJSON struct {
 	URL string `json:"url"`
+}
+type inputBunchJSON struct {
+	id  string `json:"correlation_id"`
+	URL string `json:"original_url"`
+}
+type outputBunchJSON struct {
+	id  string `json:"correlation_id"`
+	URL string `json:"short_url"`
 }
 type outputJSON struct {
 	URL string `json:"result"`
@@ -337,6 +346,33 @@ func handelePING(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 	}
 
+}
+func handleBunch(c *gin.Context) {
+	var inpt inputBunchJSON
+	var outpt outputBunchJSON
+	var scanner *bufio.Scanner
+	var resp []byte
+	var err error
+	body, err := c.GetRawData()
+	if err != nil {
+		serverErr(c)
+	}
+	scanner = bufio.NewScanner(bytes.NewReader(body))
+	for scanner.Scan() {
+		data := scanner.Bytes()
+		if err = json.Unmarshal(data, &inpt); err != nil {
+			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
+		}
+		outpt.id = inpt.id
+		outpt.URL = addURL(inpt.URL)
+	}
+	buf, err := json.Marshal(outpt)
+	resp = append(resp, buf...)
+	if err != nil {
+		serverErr(c)
+	} else {
+		c.Data(http.StatusCreated, "application/json", resp)
+	}
 }
 func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
