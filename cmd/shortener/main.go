@@ -368,20 +368,18 @@ func handleBunch(c *gin.Context) {
 		if bytes.IndexAny(buf, ",") == 0 {
 			buf = buf[1:]
 		}
-		if found {
-			fmt.Println(string(append(buf, byte('}'))))
-			fmt.Println("_________\n_________")
-			if err = json.Unmarshal(append(buf, byte('}')), &inpt); err != nil {
-				rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
-			}
-			outpt.ID = inpt.ID
-			outpt.URL = addURL(inpt.URL)
-			buff, err := json.Marshal(outpt)
-			resp = append(resp, buff...)
-			resp = append(resp, byte(','), byte('\n'))
-			if err != nil {
-				serverErr(c)
-			}
+		fmt.Println(string(append(buf, byte('}'))))
+		fmt.Println("_________\n_________")
+		if err = json.Unmarshal(append(buf, byte('}')), &inpt); err != nil {
+			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
+		}
+		outpt.ID = inpt.ID
+		outpt.URL = addURL(inpt.URL)
+		buff, err := json.Marshal(outpt)
+		resp = append(resp, buff...)
+		resp = append(resp, byte(','), byte('\n'))
+		if err != nil {
+			serverErr(c)
 		}
 	}
 	resp = append(resp[:len(resp)-2], byte(']'))
