@@ -8,7 +8,7 @@ import (
 
 	//	"fmt"
 	//	"log"
-	"bytes"
+
 	"database/sql"
 	"math/rand"
 	"net/http"
@@ -348,23 +348,20 @@ func handelePING(c *gin.Context) {
 
 }
 func handleBunch(c *gin.Context) {
-	var inpt inputBunchJSON
+	var inpt []inputBunchJSON
 	var outpt outputBunchJSON
-	var scanner *bufio.Scanner
 	var resp []byte
 	var err error
 	body, err := c.GetRawData()
 	if err != nil {
 		serverErr(c)
 	}
-	scanner = bufio.NewScanner(bytes.NewReader(body))
-	for scanner.Scan() {
-		data := scanner.Bytes()
-		if err = json.Unmarshal(data, &inpt); err != nil {
-			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
-		}
-		outpt.id = inpt.id
-		outpt.URL = addURL(inpt.URL)
+	if err = json.Unmarshal(body, &inpt); err != nil {
+		rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
+	}
+	for i := range inpt {
+		outpt.id = inpt[i].id
+		outpt.URL = addURL(inpt[i].URL)
 	}
 	buf, err := json.Marshal(outpt)
 	resp = append(resp, buf...)
