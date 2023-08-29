@@ -73,7 +73,7 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (id INTEGER PRIMARY KEY, seq VARCHAR(10), url VARCHAR(2084))")
+	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (id INTEGER PRIMARY KEY, seq VARCHAR(10), url VARCHAR(2084) UNIQUE)")
 	if errr != nil {
 		rnt.sugar.Errorw(errr.Error(), "event", "dbInit")
 	}
@@ -85,14 +85,29 @@ func DatabaseInit() {
 	}
 }
 
-func dbWriteURL(key string, url string) {
-	_, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3)", rnt.dbID, key, url)
-	rnt.dbID = rnt.dbID + 1
+func dbWriteURL(key string, url string) (string, bool) {
+	rtrn, err := rnt.db.Exec("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id", rnt.dbID, key, url)
+	if err != nil {
+		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
+	}
+	id, err := rtrn.LastInsertId()
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
 	}
 	fmt.Println(key, url)
 	fmt.Println(dbReadURL(key))
+	if int(id) == rnt.dbID {
+		rnt.dbID = rnt.dbID + 1
+		return key, false
+	} else {
+		row := rnt.db.QueryRow(
+			"SELECT URL FROM shorted WHERE id = $1", id)
+		err := row.Scan(&key)
+		if err != nil {
+			rnt.sugar.Errorw(err.Error(), "event", "dbWrite")
+		}
+		return key, true
+	}
 
 }
 
@@ -272,8 +287,10 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func addURL(url string) string {
+func addURL(url string) (string, bool) {
+	flag := false
 	key := randSeq(8)
+
 	if cfg.typeOfStorage == "file" || cfg.typeOfStorage == "map" {
 		rnt.keytoURLMap[key] = url
 	}
@@ -282,10 +299,11 @@ func addURL(url string) string {
 	}
 	if cfg.typeOfStorage == "db" {
 		//fmt.Println("db write")
-		dbWriteURL(key, url)
+		key, flag = dbWriteURL(key, url)
+
 	}
 	outURL := cfg.BaseURL + "/" + key
-	return outURL
+	return outURL, flag
 }
 func handleGET(c *gin.Context) {
 	key := c.Param("key")
@@ -310,16 +328,22 @@ func handlePOST(c *gin.Context) {
 		serverErr(c)
 	} else {
 		body, err := c.GetRawData()
+		url, dupl := addURL(string(body))
+
 		if err != nil {
 			serverErr(c)
+		}
+		if dupl {
+			c.String(http.StatusConflict, url)
 		} else {
-			c.String(http.StatusCreated, addURL(string(body)))
+			c.String(http.StatusCreated, url)
 		}
 	}
 }
 func handleAPIPOST(c *gin.Context) {
 	var inpt inputJSON
 	var outpt outputJSON
+	var flag bool
 	body, err := c.GetRawData()
 	if err != nil {
 		serverErr(c)
@@ -327,10 +351,12 @@ func handleAPIPOST(c *gin.Context) {
 	if err = json.Unmarshal(body, &inpt); err != nil {
 		serverErr(c)
 	}
-	outpt.URL = addURL(inpt.URL)
+	outpt.URL, flag = addURL(inpt.URL)
 	resp, err := json.Marshal(outpt)
 	if err != nil {
 		serverErr(c)
+	} else if flag {
+		c.Data(http.StatusConflict, "application/json", resp)
 	} else {
 		c.Data(http.StatusCreated, "application/json", resp)
 	}
@@ -354,6 +380,7 @@ func handleBunch(c *gin.Context) {
 	var buf []byte
 	var resp []byte
 	var err error
+
 	resp = append(resp, byte('['))
 	body, err := c.GetRawData()
 	if err != nil {
@@ -374,7 +401,7 @@ func handleBunch(c *gin.Context) {
 			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
 		outpt.ID = inpt.ID
-		outpt.URL = addURL(inpt.URL)
+		outpt.URL, _ = addURL(inpt.URL)
 		buff, err := json.Marshal(outpt)
 		resp = append(resp, buff...)
 		resp = append(resp, byte(','), byte('\n'))
