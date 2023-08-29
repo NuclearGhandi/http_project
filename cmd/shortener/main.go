@@ -171,7 +171,7 @@ func FileDBTransfer() {
 			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
 		rnt.fileLen = rnt.fileLen + 1
-		//fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
+		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT DO UPDATE SET (seq = $2) WHERE url = $3 RETURNING id`
 		rsp, err := rnt.db.Exec(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
 
@@ -187,7 +187,7 @@ func FileDBTransfer() {
 		}
 	}
 	file.Close()
-	//dbFmt()
+	dbFmt()
 }
 
 func FileInit() {
