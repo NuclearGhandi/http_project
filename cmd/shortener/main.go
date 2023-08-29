@@ -172,7 +172,7 @@ func FileDBTransfer() {
 		}
 		rnt.fileLen = rnt.fileLen + 1
 		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
-		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT DO UPDATE SET (seq = $2) WHERE (url = $3) RETURNING id`
+		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT DO UPDATE SET {seq = $2} WHERE (url = $3) RETURNING id`
 		rsp, err := rnt.db.Exec(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
 
 		if err != nil {
