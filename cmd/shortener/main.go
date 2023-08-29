@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -47,11 +48,11 @@ type inputJSON struct {
 	URL string `json:"url"`
 }
 type inputBunchJSON struct {
-	id  string `json:"correlation_id"`
+	ID  string `json:"correlation_id"`
 	URL string `json:"original_url"`
 }
 type outputBunchJSON struct {
-	id  string `json:"correlation_id"`
+	ID  string `json:"correlation_id"`
 	URL string `json:"short_url"`
 }
 type outputJSON struct {
@@ -348,28 +349,43 @@ func handelePING(c *gin.Context) {
 
 }
 func handleBunch(c *gin.Context) {
-	var inpt []inputBunchJSON
+	var inpt inputBunchJSON
 	var outpt outputBunchJSON
+	var buf []byte
 	var resp []byte
 	var err error
+	resp = append(resp, byte('['))
 	body, err := c.GetRawData()
 	if err != nil {
 		serverErr(c)
 	}
-	if err = json.Unmarshal(body, &inpt); err != nil {
-		rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
+	found := true
+	//fmt.Println(string(body))
+	body = body[1 : len(body)-2]
+	//fmt.Println(string(body))
+	for found {
+		buf, body, found = bytes.Cut(body, []byte("}"))
+		if bytes.IndexAny(buf, ",") == 0 {
+			buf = buf[1:]
+		}
+		fmt.Println(string(append(buf, byte('}'))))
+		fmt.Println("_________\n_________")
+		if found {
+			if err = json.Unmarshal(append(buf, byte('}')), &inpt); err != nil {
+				rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
+			}
+			outpt.ID = inpt.ID
+			outpt.URL = addURL(inpt.URL)
+			buff, err := json.Marshal(outpt)
+			resp = append(resp, buff...)
+			resp = append(resp, byte(','), byte('\n'))
+			if err != nil {
+				serverErr(c)
+			}
+		}
 	}
-	for i := range inpt {
-		outpt.id = inpt[i].id
-		outpt.URL = addURL(inpt[i].URL)
-	}
-	buf, err := json.Marshal(outpt)
-	resp = append(resp, buf...)
-	if err != nil {
-		serverErr(c)
-	} else {
-		c.Data(http.StatusCreated, "application/json", resp)
-	}
+	resp = append(resp[:len(resp)-2], byte(']'))
+	c.Data(http.StatusCreated, "application/json", resp)
 }
 func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
