@@ -360,7 +360,7 @@ func handleBunch(c *gin.Context) {
 		serverErr(c)
 	}
 	found := true
-	//fmt.Println(string(body))
+	fmt.Println(string(body))
 	body = body[1 : len(body)-2]
 	//fmt.Println(string(body))
 	for found {
