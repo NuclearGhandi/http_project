@@ -368,9 +368,9 @@ func handleBunch(c *gin.Context) {
 		if bytes.IndexAny(buf, ",") == 0 {
 			buf = buf[1:]
 		}
-		fmt.Println(string(append(buf, byte('}'))))
-		fmt.Println("_________\n_________")
 		if found {
+			fmt.Println(string(append(buf, byte('}'))))
+			fmt.Println("_________\n_________")
 			if err = json.Unmarshal(append(buf, byte('}')), &inpt); err != nil {
 				rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 			}
