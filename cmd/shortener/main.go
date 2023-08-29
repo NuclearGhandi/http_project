@@ -87,7 +87,7 @@ func DatabaseInit() {
 
 func dbWriteURL(key string, url string) (string, bool) {
 	var id int
-	row := rnt.db.QueryRow("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING id", rnt.dbID, key, url)
+	row := rnt.db.QueryRow("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT (url) DO UPDATE SET url = EXCLUDED.url RETURNING id", rnt.dbID, key, url)
 	err := row.Scan(&id)
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "dbRead")
@@ -171,7 +171,7 @@ func FileDBTransfer() {
 		}
 		rnt.fileLen = rnt.fileLen + 1
 		fmt.Println(rnt.dbID, buf.ShortURL, buf.OriginalURL)
-		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT (url) DO UPDATE SET seq = $2 RETURNING id`
+		sqlStatment := `INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT (url) DO UPDATE SET seq = EXCLUDED.seq RETURNING id`
 		row := rnt.db.QueryRow(sqlStatment, rnt.dbID, buf.ShortURL, buf.OriginalURL)
 		err := row.Scan(&id)
 		if err != nil {
