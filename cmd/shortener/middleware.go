@@ -7,9 +7,34 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+func Logger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		t := time.Now()
+
+		c.Set("example", "12345")
+
+		c.Next()
+		method := c.Request.Method
+		uri := c.Param("key")
+		header := c.Request.Header
+		duration := time.Since(t)
+		status := c.Writer.Status()
+		size := c.Writer.Size()
+		rnt.sugar.Infoln(
+			"uri", uri,
+			"method", method,
+			"header", header,
+			"status", status,
+			"duration", duration,
+			"size", size,
+		)
+	}
+}
 
 const (
 	BestCompression    = gzip.BestCompression

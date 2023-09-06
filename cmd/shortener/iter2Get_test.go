@@ -67,7 +67,7 @@ func TestGetRoute(t *testing.T) {
 		},
 	}
 	TServerInit()
-	router := setupRouter()
+	router := SetupRouter()
 	rnt.keytoURLMap = make(map[string]string)
 	for i, URL := range urls {
 		req, err := http.NewRequest(http.MethodPost, "http://localhost:8080/", strings.NewReader(URL))
@@ -148,7 +148,7 @@ func TestGetRouteCompress(t *testing.T) {
 		},
 	}
 	TServerInit()
-	router := setupRouter()
+	router := SetupRouter()
 	rnt.keytoURLMap = make(map[string]string)
 	for i, URL := range urls {
 		b, err := Compress([]byte(URL))

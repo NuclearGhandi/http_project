@@ -65,7 +65,7 @@ func TestPostAPIRoute(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var inpt inputJSON
 			var outpt outputJSON
-			router := setupRouter()
+			router := SetupRouter()
 			w := httptest.NewRecorder()
 			inpt.URL = test.body
 			msg, err := json.Marshal(inpt)

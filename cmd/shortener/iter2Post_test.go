@@ -106,7 +106,7 @@ func TestPostRoute(t *testing.T) {
 	TServerInit()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			router := setupRouter()
+			router := SetupRouter()
 			w := httptest.NewRecorder()
 			req, err := http.NewRequest(test.method, "/", test.body)
 			if err != nil {
