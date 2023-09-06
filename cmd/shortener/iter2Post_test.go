@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"log"
@@ -10,11 +12,51 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
+func Compress(data []byte) ([]byte, error) {
+	var b bytes.Buffer
+
+	w := gzip.NewWriter(&b)
+	_, err := w.Write(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed write data to compress temporary buffer: %v", err)
+	}
+
+	err = w.Close()
+	if err != nil {
+		return nil, fmt.Errorf("failed compress data: %v", err)
+	}
+
+	return b.Bytes(), nil
+}
+
+func Decompress(data []byte) ([]byte, error) {
+	r, err := gzip.NewReader(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("failed decompress: %v", err)
+	}
+	defer r.Close()
+
+	var b bytes.Buffer
+	_, err = b.ReadFrom(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed decompress data: %v", err)
+	}
+
+	return b.Bytes(), nil
+}
 func TServerInit() {
 	cfg.ServerAddress = ":8080"
 	cfg.BaseURL = "http://localhost:8080"
+	cfg.typeOfStorage = "map"
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	defer logger.Sync()
+	rnt.sugar = *logger.Sugar()
 	//	log.Println("test_init")
 }
 func TestPostRoute(t *testing.T) {
@@ -22,7 +64,6 @@ func TestPostRoute(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
-		location    string
 		contentType string
 	}
 	tests := []struct {
@@ -65,7 +106,7 @@ func TestPostRoute(t *testing.T) {
 	TServerInit()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			router := setupRouter()
+			router := SetupRouter()
 			w := httptest.NewRecorder()
 			req, err := http.NewRequest(test.method, "/", test.body)
 			if err != nil {
