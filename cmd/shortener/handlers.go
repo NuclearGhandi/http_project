@@ -24,6 +24,9 @@ type outputJSON struct {
 	URL string `json:"result"`
 }
 
+func HandleUserReturn(c *gin.Context) {
+
+}
 func HandleGET(c *gin.Context) {
 	key := c.Param("key")
 	if cfg.typeOfStorage == "map" || cfg.typeOfStorage == "file" {
@@ -47,8 +50,8 @@ func HandlePOST(c *gin.Context) {
 		serverErr(c)
 	} else {
 		body, err := c.GetRawData()
-		url, dupl := addURL(string(body))
-
+		user := CookieDecoder(c)
+		url, dupl := addURL(string(body), user)
 		if err != nil {
 			serverErr(c)
 		}
@@ -70,7 +73,8 @@ func HandleAPIPOST(c *gin.Context) {
 	if err = json.Unmarshal(body, &inpt); err != nil {
 		serverErr(c)
 	}
-	outpt.URL, flag = addURL(inpt.URL)
+	user := CookieDecoder(c)
+	outpt.URL, flag = addURL(inpt.URL, user)
 	resp, err := json.Marshal(outpt)
 	if err != nil {
 		serverErr(c)
@@ -120,7 +124,8 @@ func HandleBunch(c *gin.Context) {
 			rnt.sugar.Fatalw(err.Error(), "event", "FileReadMarshalErr")
 		}
 		outpt.ID = inpt.ID
-		outpt.URL, _ = addURL(inpt.URL)
+		user := CookieDecoder(c)
+		outpt.URL, _ = addURL(inpt.URL, user)
 		buff, err := json.Marshal(outpt)
 		resp = append(resp, buff...)
 		resp = append(resp, byte(','), byte('\n'))
