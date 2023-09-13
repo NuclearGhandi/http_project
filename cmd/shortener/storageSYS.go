@@ -2,16 +2,26 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
-	"fmt"
-
 	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"math/rand"
 	"os"
+	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	_ "github.com/lib/pq"
 )
 
+const TOKEN_EXP = time.Hour * 3
+const SECRET_KEY = "supersecretkey"
+
+type Claims struct {
+	jwt.RegisteredClaims
+	UserID string
+}
 type fileJSON struct {
 	UUID        int    `json:"uuid,string"`
 	ShortURL    string `json:"short_url,string"`
@@ -29,7 +39,7 @@ func DatabaseInit() {
 	if err != nil {
 		rnt.sugar.Fatalw(err.Error(), "event", "databaseInit")
 	}
-	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (id INTEGER PRIMARY KEY, seq VARCHAR(10), url VARCHAR(2084) UNIQUE)")
+	_, errr := rnt.db.Exec("CREATE TABLE IF NOT EXISTS shorted (id INTEGER PRIMARY KEY, seq VARCHAR(10), url VARCHAR(2084) UNIQUE), user VARCHAR(2084)")
 	if errr != nil {
 		rnt.sugar.Errorw(errr.Error(), "event", "dbInit")
 	}
@@ -41,9 +51,9 @@ func DatabaseInit() {
 	}
 }
 
-func dbWriteURL(key string, url string) (string, bool) {
+func dbWriteURL(key string, url string, user string) (string, bool) {
 	var id int
-	row := rnt.db.QueryRow("INSERT INTO shorted (id, seq, url) VALUES ($1, $2, $3) ON CONFLICT (url) DO UPDATE SET url = $3 RETURNING id", rnt.dbID, key, url)
+	row := rnt.db.QueryRow("INSERT INTO shorted (id, seq, url, user) VALUES ($1, $2, $3, $4) ON CONFLICT (url) DO UPDATE SET url = $3 RETURNING id", rnt.dbID, key, url, user)
 	err := row.Scan(&id)
 	if err != nil {
 		rnt.sugar.Errorw(err.Error(), "event", "dbRead")
@@ -208,7 +218,7 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func addURL(url string) (string, bool) {
+func addURL(url string, user string) (string, bool) {
 	flag := false
 	key := randSeq(8)
 
@@ -220,9 +230,39 @@ func addURL(url string) (string, bool) {
 	}
 	if cfg.typeOfStorage == "db" {
 		//fmt.Println("db write")
-		key, flag = dbWriteURL(key, url)
+		key, flag = dbWriteURL(key, url, user)
 
 	}
 	outURL := cfg.BaseURL + "/" + key
 	return outURL, flag
+}
+
+func CookieDecoder(c *gin.Context) string {
+	var ErrNoCookie = errors.New("http: named cookie not present")
+	var userID string
+	inptCookie, err := c.Cookie("auth")
+	if err == ErrNoCookie {
+		userID = randSeq(10)
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(TOKEN_EXP)),
+			},
+			UserID: userID,
+		})
+		outpCookie, err := token.SignedString([]byte(SECRET_KEY))
+		if err != nil {
+			rnt.sugar.Fatalw(err.Error(), "event", "Cookie Decoder")
+		}
+		c.SetCookie("auth", outpCookie)
+	} else if err != nil {
+		serverErr(c)
+		return "err"
+	} else {
+		claims := &Claims{}
+		jwt.ParseWithClaims(inptCookie, claims, func(t *jwt.Token) (interface{}, error) {
+			return []byte(SECRET_KEY), nil
+		})
+		userID = claims.UserID
+	}
+	return userID
 }
